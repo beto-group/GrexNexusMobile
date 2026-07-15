@@ -1,0 +1,21 @@
+# ninja log v5
+0	46	1782230201015747991	CMakeFiles/termux.dir/termux.c.o	9e31db83d74da906
+47	100	1782230201068596170	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86_64/libtermux.so	66bb92cc454757c6
+0	10	0	clean	abf2eb026ebeaaa0
+1	65	1782230915432957504	CMakeFiles/termux.dir/termux.c.o	9e31db83d74da906
+65	136	1782230915502538766	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86_64/libtermux.so	66bb92cc454757c6
+0	8	0	clean	abf2eb026ebeaaa0
+0	55	1782231336197975150	CMakeFiles/termux.dir/termux.c.o	9e31db83d74da906
+55	116	1782231336257705833	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86_64/libtermux.so	66bb92cc454757c6
+0	7	0	clean	abf2eb026ebeaaa0
+1	49	1782231708472838495	CMakeFiles/termux.dir/termux.c.o	9e31db83d74da906
+49	107	1782231708529300616	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86_64/libtermux.so	66bb92cc454757c6
+0	8	0	clean	abf2eb026ebeaaa0
+2	53	1782243255625250500	CMakeFiles/termux.dir/termux.c.o	9e31db83d74da906
+53	104	1782243255677037503	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86_64/libtermux.so	66bb92cc454757c6
+0	9	0	clean	abf2eb026ebeaaa0
+1	53	1782243599548840495	CMakeFiles/termux.dir/termux.c.o	9e31db83d74da906
+53	108	1782243599603320677	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86_64/libtermux.so	66bb92cc454757c6
+0	8	0	clean	abf2eb026ebeaaa0
+0	57	1782244272441289656	CMakeFiles/termux.dir/termux.c.o	9e31db83d74da906
+57	125	1782244272508195457	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86_64/libtermux.so	66bb92cc454757c6

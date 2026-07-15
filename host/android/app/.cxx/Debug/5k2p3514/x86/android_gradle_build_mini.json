@@ -1,0 +1,27 @@
+{
+  "buildFiles": [
+    "/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/blackbird/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/.cxx/Debug/5k2p3514/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/blackbird/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/.cxx/Debug/5k2p3514/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "termux::@6890427a1f51a3e7e1df": {
+      "artifactName": "termux",
+      "abi": "x86",
+      "output": "/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/x86/libtermux.so",
+      "runtimeFiles": []
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+	"appId": "com.datacore.sovereigninspector",
+	"appName": "Sovereign Inspector",
+	"webDir": "dist",
+	"packageClassList": [
+		"AppPlugin",
+		"FilesystemPlugin",
+		"SecureStoragePlugin"
+	]
+}

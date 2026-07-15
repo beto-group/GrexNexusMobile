@@ -1,0 +1,21 @@
+# ninja log v5
+0	50	1782230199850064666	CMakeFiles/termux.dir/termux.c.o	97f964e505fb3878
+50	106	1782230199905777023	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/armeabi-v7a/libtermux.so	a4de9802dc69b089
+0	11	0	clean	abf2eb026ebeaaa0
+1	67	1782230915106949244	CMakeFiles/termux.dir/termux.c.o	97f964e505fb3878
+67	127	1782230915158234610	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/armeabi-v7a/libtermux.so	a4de9802dc69b089
+0	7	0	clean	abf2eb026ebeaaa0
+0	73	1782231335777567686	CMakeFiles/termux.dir/termux.c.o	97f964e505fb3878
+74	126	1782231335828714801	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/armeabi-v7a/libtermux.so	a4de9802dc69b089
+0	7	0	clean	abf2eb026ebeaaa0
+0	55	1782231708233773550	CMakeFiles/termux.dir/termux.c.o	97f964e505fb3878
+55	108	1782231708285875464	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/armeabi-v7a/libtermux.so	a4de9802dc69b089
+0	9	0	clean	abf2eb026ebeaaa0
+2	79	1782243255327467298	CMakeFiles/termux.dir/termux.c.o	97f964e505fb3878
+79	143	1782243255395096669	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/armeabi-v7a/libtermux.so	a4de9802dc69b089
+0	8	0	clean	abf2eb026ebeaaa0
+0	58	1782243599243705340	CMakeFiles/termux.dir/termux.c.o	97f964e505fb3878
+58	124	1782243599307929862	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/armeabi-v7a/libtermux.so	a4de9802dc69b089
+0	8	0	clean	abf2eb026ebeaaa0
+1	67	1782244272121227589	CMakeFiles/termux.dir/termux.c.o	97f964e505fb3878
+67	118	1782244272170546964	/Volumes/BackUp_WB-1TB/APPLICATIONS/BETO_BACKEND/app-repos/production-contabo/DATACORE/GREX.datacore/hosts/GrexNexusMobile/host/android/app/build/intermediates/cxx/Debug/5k2p3514/obj/armeabi-v7a/libtermux.so	a4de9802dc69b089
