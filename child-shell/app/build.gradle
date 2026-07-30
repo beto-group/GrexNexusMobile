@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'group.beto.grexnexus.child'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "group.beto.grexnexus.child"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            // Disable shrinking so APK is fully injectable without ProGuard complications
+            minifyEnabled false
+            shrinkResources false
+        }
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // Force assets to be compressed=false so ZIP injection
+    // of index.html and bundle.es.js can align correctly
+    aaptOptions {
+        noCompress '.js', '.html', '.css', '.json', '.wasm'
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}

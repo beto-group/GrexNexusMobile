@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Grex Component</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #090d16; width: 100%; height: 100%; overflow: hidden; color: #fff; font-family: sans-serif; }
+    #grex-root { width: 100%; height: 100vh; overflow-y: auto; }
+    .boot-screen {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100vh; gap: 16px; color: rgba(255,255,255,0.4); font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="grex-root">
+    <div class="boot-screen">
+      <div style="width:40px;height:40px;border:2px solid #a855f7;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <span>Loading component...</span>
+    </div>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+  </div>
+  <script type="module">
+    // GREX CHILD SHELL — TEMPLATE BOOTLOADER
+    // This file is replaced by HomeScreenPlugin.installChildApk() during APK factory mutation.
+    // The real bootloader will import mount_app from ./bundle.es.js and mount the component.
+    console.warn('[GrexChildShell] Placeholder bootloader loaded. Template APK not yet mutated.');
+  </script>
+</body>
+</html>

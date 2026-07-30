@@ -1,0 +1,16 @@
+// Top-level build.gradle for GrexChildShell
+// Minimal Android-only project — no Capacitor, no React Native
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
