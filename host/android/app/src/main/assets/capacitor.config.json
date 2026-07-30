@@ -1,5 +1,10 @@
 {
 	"appId": "com.betogroup.grexnexusmobile",
 	"appName": "Grex Nexus Mobile",
-	"webDir": "dist"
+	"webDir": "dist",
+	"plugins": {
+		"CapacitorHttp": {
+			"enabled": true
+		}
+	}
 }
