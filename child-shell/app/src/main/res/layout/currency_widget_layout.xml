@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/currency_widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="10dp"
+    android:background="@drawable/grex_widget_bg">
+
+    <!-- Left Button: Cycle Currency/Crypto Pair -->
+    <TextView
+        android:id="@+id/btn_currency_pair"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💱 USD/MYR"
+        android:textColor="#C084FC"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:background="#25ffffff"
+        android:layout_marginEnd="8dp"
+        android:clickable="true" />
+
+    <!-- Center Section: Conversion Calculation Result -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/currency_widget_rate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$100 = 442.00 MYR"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/currency_widget_sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="USD ➔ MYR @ 4.42"
+            android:textColor="#4ADE80"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <!-- Right Controls: Cycle Amount + Reverse Trade Direction -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="6dp">
+
+        <TextView
+            android:id="@+id/btn_currency_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$100"
+            android:textColor="#FBBF24"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:background="#20ffffff"
+            android:layout_marginEnd="4dp"
+            android:clickable="true" />
+
+        <TextView
+            android:id="@+id/btn_currency_direction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⇄ SWAP"
+            android:textColor="#38BDF8"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:background="#20ffffff"
+            android:clickable="true" />
+    </LinearLayout>
+
+</LinearLayout>
