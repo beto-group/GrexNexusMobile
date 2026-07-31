@@ -17,7 +17,6 @@ android {
     buildTypes {
         debug {
             debuggable true
-            // Disable shrinking so APK is fully injectable without ProGuard complications
             minifyEnabled false
             shrinkResources false
         }
@@ -33,10 +32,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    // Force assets to be compressed=false so ZIP injection
-    // of index.html and bundle.es.js can align correctly
-    aaptOptions {
-        noCompress '.js', '.html', '.css', '.json', '.wasm'
+    androidResources {
+        noCompress 'js', 'html', 'css', 'json', 'wasm'
     }
 }
 
