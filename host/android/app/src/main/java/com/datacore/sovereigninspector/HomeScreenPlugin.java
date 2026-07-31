@@ -159,8 +159,14 @@ public class HomeScreenPlugin extends Plugin {
             AppWidgetManager appWidgetManager = context.getSystemService(AppWidgetManager.class);
 
             ComponentName myProvider;
-            if ("3x1".equalsIgnoreCase(type) || "currency".equalsIgnoreCase(type)) {
+            if ("1x1".equalsIgnoreCase(type) || "compact".equalsIgnoreCase(type)) {
+                myProvider = new ComponentName(context, CompactWidgetProvider.class);
+            } else if ("3x1".equalsIgnoreCase(type) || "currency".equalsIgnoreCase(type)) {
                 myProvider = new ComponentName(context, CurrencyWidgetProvider.class);
+            } else if ("4x1".equalsIgnoreCase(type) || "banner".equalsIgnoreCase(type)) {
+                myProvider = new ComponentName(context, FullBannerWidgetProvider.class);
+            } else if ("4x2".equalsIgnoreCase(type) || "dashboard".equalsIgnoreCase(type)) {
+                myProvider = new ComponentName(context, DashboardWidgetProvider.class);
             } else {
                 myProvider = new ComponentName(context, GrexWidgetProvider.class);
             }

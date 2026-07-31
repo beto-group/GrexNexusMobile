@@ -55,7 +55,16 @@
 
         </activity>
 
-        <receiver android:name=".GrexWidgetProvider" android:exported="true" android:label="2x2 Component Launcher">
+        <receiver android:name=".CompactWidgetProvider" android:exported="true" android:label="1x1 Compact Launcher">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/compact_widget_info" />
+        </receiver>
+
+        <receiver android:name=".GrexWidgetProvider" android:exported="true" android:label="2x2 Bot Quick Launcher">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -64,13 +73,31 @@
                 android:resource="@xml/grex_widget_info" />
         </receiver>
 
-        <receiver android:name=".CurrencyWidgetProvider" android:exported="true" android:label="3x1 Currency Ticker">
+        <receiver android:name=".CurrencyWidgetProvider" android:exported="true" android:label="3x1 FX Trade Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/currency_widget_info" />
+        </receiver>
+
+        <receiver android:name=".FullBannerWidgetProvider" android:exported="true" android:label="4x1 Full FX Banner">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/full_banner_widget_info" />
+        </receiver>
+
+        <receiver android:name=".DashboardWidgetProvider" android:exported="true" android:label="4x2 Master Dashboard">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/dashboard_widget_info" />
         </receiver>
     </application>
 </manifest>

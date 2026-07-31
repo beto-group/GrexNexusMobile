@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/full_banner_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="10dp"
+    android:background="@drawable/grex_widget_bg">
+
+    <TextView
+        android:id="@+id/btn_full_banner_pair"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💱 MASTER FX"
+        android:textColor="#C084FC"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:padding="6dp"
+        android:background="#25ffffff"
+        android:layout_marginEnd="10dp"
+        android:clickable="true" />
+
+    <TextView
+        android:id="@+id/full_banner_ticker"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="USD 4.42 MYR  •  EUR 1.08 USD  •  ETH $3,450  •  BTC $67,200"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="marquee" />
+
+    <TextView
+        android:id="@+id/btn_full_banner_refresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔄 LIVE"
+        android:textColor="#4ADE80"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:padding="6dp"
+        android:background="#20ffffff"
+        android:layout_marginStart="8dp"
+        android:clickable="true" />
+
+</LinearLayout>
