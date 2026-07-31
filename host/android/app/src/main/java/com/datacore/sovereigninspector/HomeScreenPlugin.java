@@ -674,14 +674,14 @@ public class HomeScreenPlugin extends Plugin {
 
             // Step 4: Draw component icon in 70% safe zone (centred)
             if (componentBitmap != null) {
-                int sz = (int)(targetSize * 0.70f);
+                int sz = (int)(targetSize * 0.55f);
                 int off = (targetSize - sz) / 2;
                 canvas.drawBitmap(componentBitmap,
                     new Rect(0, 0, componentBitmap.getWidth(), componentBitmap.getHeight()),
                     new Rect(off, off, off + sz, off + sz),
                     new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             } else if (mothershipBadgeBitmap != null) {
-                int sz = (int)(targetSize * 0.70f);
+                int sz = (int)(targetSize * 0.55f);
                 int off = (targetSize - sz) / 2;
                 canvas.drawBitmap(mothershipBadgeBitmap,
                     new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight()),
