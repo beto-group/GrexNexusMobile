@@ -653,35 +653,52 @@ public class HomeScreenPlugin extends Plugin {
             // 1. Pure Black Canvas Fill (#000000)
             canvas.drawColor(0xFF000000);
 
-            // 2. Draw Component Icon filling the main 75% inner safe zone
+            // 2. Draw Component Icon filling the main 70% inner safe zone
             if (componentBitmap != null) {
-                int iconSize = (int) (targetSize * 0.75f);
+                int iconSize = (int) (targetSize * 0.70f);
                 int offset = (targetSize - iconSize) / 2;
                 Rect src = new Rect(0, 0, componentBitmap.getWidth(), componentBitmap.getHeight());
                 Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
                 canvas.drawBitmap(componentBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             } else if (mothershipBadgeBitmap != null) {
-                int iconSize = (int) (targetSize * 0.75f);
+                int iconSize = (int) (targetSize * 0.70f);
                 int offset = (targetSize - iconSize) / 2;
                 Rect src = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
                 Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
                 canvas.drawBitmap(mothershipBadgeBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             }
 
-            // 3. Draw Mothership Badge Badge inside circular safe zone (bottom-right overlap)
+            // 3. Draw Mothership Badge inside a clean circular background container in bottom-right corner
             if (mothershipBadgeBitmap != null) {
-                int badgeSize = (int) (targetSize * 0.30f);
-                // Positioned inside the 66% circular mask boundary (center at targetSize * 0.71)
-                int badgeX = (int) (targetSize * 0.56f);
-                int badgeY = (int) (targetSize * 0.56f);
+                int badgeContainerSize = (int) (targetSize * 0.34f);
+                int badgeX = (int) (targetSize * 0.54f);
+                int badgeY = (int) (targetSize * 0.54f);
 
-                // Black outer ring for badge separation
-                Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                borderPaint.setColor(0xFF000000);
-                canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f, badgeSize / 2f + 6, borderPaint);
+                float centerX = badgeX + badgeContainerSize / 2f;
+                float centerY = badgeY + badgeContainerSize / 2f;
+                float radius = badgeContainerSize / 2f;
 
+                // A. Draw Pure Black (#000000) circular background container
+                Paint bgContainerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                bgContainerPaint.setColor(0xFF000000);
+                canvas.drawCircle(centerX, centerY, radius + 4, bgContainerPaint);
+
+                // B. Draw subtle border ring (#333333) around badge container
+                Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                ringPaint.setColor(0xFF222222);
+                ringPaint.setStyle(Paint.Style.STROKE);
+                ringPaint.setStrokeWidth(3f);
+                canvas.drawCircle(centerX, centerY, radius + 3, ringPaint);
+
+                // C. Draw official BETO Mothership Emblem centered inside container
+                int innerPadding = (int) (badgeContainerSize * 0.12f);
                 Rect badgeSrc = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
-                Rect badgeDst = new Rect(badgeX, badgeY, badgeX + badgeSize, badgeY + badgeSize);
+                Rect badgeDst = new Rect(
+                    badgeX + innerPadding,
+                    badgeY + innerPadding,
+                    badgeX + badgeContainerSize - innerPadding,
+                    badgeY + badgeContainerSize - innerPadding
+                );
                 canvas.drawBitmap(mothershipBadgeBitmap, badgeSrc, badgeDst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             }
 
