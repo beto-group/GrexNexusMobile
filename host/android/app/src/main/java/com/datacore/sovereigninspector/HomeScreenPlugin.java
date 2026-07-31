@@ -552,6 +552,27 @@ public class HomeScreenPlugin extends Plugin {
     }
 
     /**
+     * Converts any Drawable (AdaptiveIconDrawable, VectorDrawable, BitmapDrawable) to Bitmap.
+     */
+    private Bitmap drawableToBitmap(android.graphics.drawable.Drawable drawable, int width, int height) {
+        if (drawable == null) return null;
+        if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
+            Bitmap b = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
+            if (b != null) return b;
+        }
+        try {
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, width, height);
+            drawable.draw(canvas);
+            return bitmap;
+        } catch (Exception e) {
+            android.util.Log.e("GrexAPKFactory", "[APK Factory] Error converting drawable to bitmap: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Generates a custom component icon with the Mothership logo badge in bottom-right corner.
      */
     private byte[] generateBadgedIcon(Context context, String base64IconStr, int targetSize) {
@@ -566,14 +587,14 @@ public class HomeScreenPlugin extends Plugin {
                 componentBitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
             }
 
-            // Get Mothership icon badge from context
+            // Get Mothership icon badge from context (handles AdaptiveIconDrawable on Android 8+)
             Bitmap mothershipBadgeBitmap = null;
             try {
                 android.graphics.drawable.Drawable drawable = context.getPackageManager().getApplicationIcon(context.getPackageName());
-                if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
-                    mothershipBadgeBitmap = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
-                }
-            } catch (Exception ignored) {}
+                mothershipBadgeBitmap = drawableToBitmap(drawable, targetSize, targetSize);
+            } catch (Exception e) {
+                android.util.Log.w("GrexAPKFactory", "[APK Factory] Could not load mothership application icon: " + e.getMessage());
+            }
 
             Bitmap resultBitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(resultBitmap);
