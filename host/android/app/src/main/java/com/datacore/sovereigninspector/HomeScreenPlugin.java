@@ -690,10 +690,11 @@ public class HomeScreenPlugin extends Plugin {
             }
 
             // Step 5: BETO triquetra badge in black circle container, bottom-right
+            // Badge is positioned to stay FULLY within the adaptive icon safe zone (inner 66%)
             if (mothershipBadgeBitmap != null) {
-                int csz  = (int)(targetSize * 0.34f);
-                int bx   = (int)(targetSize * 0.54f);
-                int by   = (int)(targetSize * 0.54f);
+                int csz  = (int)(targetSize * 0.28f);  // 28% — compact, fully visible
+                int bx   = (int)(targetSize * 0.50f);  // shifted inward from 0.54 to stay in safe zone
+                int by   = (int)(targetSize * 0.50f);
                 float cx = bx + csz / 2f;
                 float cy = by + csz / 2f;
                 float r  = csz / 2f;
