@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
@@ -21,10 +22,13 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -192,7 +196,8 @@ public class HomeScreenPlugin extends Plugin {
     @PluginMethod
     public void installChildApk(PluginCall call) {
         String componentName = call.getString("name", "GrexComponent");
-        String componentLabel = call.getString("label", "Grex Component");
+        String componentLabel = call.getString("label", call.getString("name", "Grex Component"));
+        String iconStr = call.getString("icon", "");
         String bundleJs = call.getString("bundleJs", "");
 
         // Validate required fields
@@ -216,7 +221,7 @@ public class HomeScreenPlugin extends Plugin {
                 outputDir.mkdirs();
 
                 String safeName = componentName.replaceAll("[^a-zA-Z0-9_]", "");
-                outputApk = new File(outputDir, safeName + ".apk");
+                File tempUnsignedApk = new File(outputDir, safeName + "_unsigned.apk");
 
                 // 2. Open template APK from mothership assets
                 InputStream templateStream;
@@ -229,12 +234,13 @@ public class HomeScreenPlugin extends Plugin {
                     );
                 }
 
-                // 3. Build the real bootloader HTML for this component
+                // 3. Build component bootloader HTML + badged icon PNG
                 String bootloaderHtml = buildBootloaderHtml(componentLabel, componentName);
+                byte[] badgedIconPng = generateBadgedIcon(context, iconStr, 432);
 
-                // 4. ZIP Mutation: copy template entries, replace bundle/index.html + bundle/bundle.es.js
+                // 4. ZIP Mutation: copy template entries, replace bundle/index.html + bundle/bundle.es.js + icon + manifest
                 ZipInputStream zis = new ZipInputStream(templateStream);
-                FileOutputStream fos = new FileOutputStream(outputApk);
+                FileOutputStream fos = new FileOutputStream(tempUnsignedApk);
                 ZipOutputStream zos = new ZipOutputStream(fos);
 
                 zos.setLevel(Deflater.DEFAULT_COMPRESSION);
@@ -253,6 +259,36 @@ public class HomeScreenPlugin extends Plugin {
                         entryName.endsWith("/bundle/bundle.es.js") ||
                         writtenEntries.contains(entryName)) {
                         zis.closeEntry();
+                        continue;
+                    }
+
+                    // Mutate AndroidManifest.xml app label
+                    if (entryName.equals("AndroidManifest.xml")) {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            baos.write(buffer, 0, len);
+                        }
+                        byte[] manifestBytes = baos.toByteArray();
+                        byte[] mutatedManifest = mutateManifestLabel(manifestBytes, componentLabel);
+
+                        ZipEntry newEntry = new ZipEntry(entryName);
+                        zos.putNextEntry(newEntry);
+                        zos.write(mutatedManifest);
+                        zos.closeEntry();
+                        zis.closeEntry();
+                        writtenEntries.add(entryName);
+                        continue;
+                    }
+
+                    // Mutate mipmap icons with custom component icon + mothership badge overlay
+                    if (badgedIconPng != null && entryName.startsWith("res/mipmap-") && entryName.endsWith(".png")) {
+                        ZipEntry newEntry = new ZipEntry(entryName);
+                        zos.putNextEntry(newEntry);
+                        zos.write(badgedIconPng);
+                        zos.closeEntry();
+                        zis.closeEntry();
+                        writtenEntries.add(entryName);
                         continue;
                     }
 
@@ -301,12 +337,48 @@ public class HomeScreenPlugin extends Plugin {
                 fos.close();
                 templateStream.close();
 
-                android.util.Log.i("GrexAPKFactory",
-                    "[APK Factory] ✓ Mutated APK written: " + outputApk.getAbsolutePath() +
-                    " (" + (outputApk.length() / 1024) + " KB)");
+                // 7. Sign mutated APK with v1 + v2 + v3 schemes using ApkSigner + debug.keystore
+                File signedApk = new File(outputDir, safeName + ".apk");
+                File unsignedApk = tempUnsignedApk;
 
-                // 7. Trigger native Android package installer on UI thread
-                final File finalApk = outputApk;
+                try {
+                    KeyStore ks = KeyStore.getInstance("PKCS12");
+                    try (InputStream ksIs = context.getAssets().open("debug.keystore")) {
+                        ks.load(ksIs, "android".toCharArray());
+                    }
+
+                    PrivateKey privateKey = (PrivateKey) ks.getKey("androiddebugkey", "android".toCharArray());
+                    java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) ks.getCertificate("androiddebugkey");
+
+                    com.android.apksig.ApkSigner.SignerConfig signerConfig = new com.android.apksig.ApkSigner.SignerConfig.Builder(
+                        "CERT",
+                        privateKey,
+                        java.util.Collections.singletonList(cert)
+                    ).build();
+
+                    new com.android.apksig.ApkSigner.Builder(java.util.Collections.singletonList(signerConfig))
+                        .setInputApk(unsignedApk)
+                        .setOutputApk(signedApk)
+                        .setV1SigningEnabled(true)
+                        .setV2SigningEnabled(true)
+                        .setV3SigningEnabled(true)
+                        .build()
+                        .sign();
+
+                    //noinspection ResultOfMethodCallIgnored
+                    unsignedApk.delete();
+
+                    android.util.Log.i("GrexAPKFactory",
+                        "[APK Factory] ✓ APK signed with v2+v3 scheme: " + signedApk.getAbsolutePath() +
+                        " (" + (signedApk.length() / 1024) + " KB)");
+
+                } catch (Exception se) {
+                    android.util.Log.e("GrexAPKFactory", "[APK Factory] ⚠️ Signing warning: " + se.getMessage(), se);
+                    signedApk = unsignedApk; // Fallback
+                }
+
+                // 8. Trigger native Android package installer on UI thread
+                final File finalApk = signedApk;
                 getActivity().runOnUiThread(() -> triggerInstaller(call, context, finalApk));
 
             } catch (Exception e) {
@@ -424,5 +496,128 @@ public class HomeScreenPlugin extends Plugin {
             + "  </script>\n"
             + "</body>\n"
             + "</html>\n";
+    }
+
+    /**
+     * Mutates the app_name string inside AndroidManifest.xml binary string pool.
+     */
+    private byte[] mutateManifestLabel(byte[] manifestBytes, String newLabel) {
+        String targetStr = "Grex Component";
+        byte[] targetBytes = new byte[targetStr.length() * 2];
+        for (int i = 0; i < targetStr.length(); i++) {
+            char c = targetStr.charAt(i);
+            targetBytes[i * 2] = (byte) (c & 0xFF);
+            targetBytes[i * 2 + 1] = (byte) ((c >> 8) & 0xFF);
+        }
+
+        int offset = -1;
+        for (int i = 0; i <= manifestBytes.length - targetBytes.length; i++) {
+            boolean match = true;
+            for (int j = 0; j < targetBytes.length; j++) {
+                if (manifestBytes[i + j] != targetBytes[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                offset = i;
+                break;
+            }
+        }
+
+        if (offset == -1) {
+            return manifestBytes;
+        }
+
+        StringBuilder sb = new StringBuilder(newLabel);
+        while (sb.length() < 14) {
+            sb.append(" ");
+        }
+        if (sb.length() > 14) {
+            sb.setLength(14);
+        }
+        String paddedLabel = sb.toString();
+
+        byte[] result = manifestBytes.clone();
+        for (int i = 0; i < 14; i++) {
+            char c = paddedLabel.charAt(i);
+            result[offset + i * 2] = (byte) (c & 0xFF);
+            result[offset + i * 2 + 1] = (byte) ((c >> 8) & 0xFF);
+        }
+
+        return result;
+    }
+
+    /**
+     * Generates a custom component icon with the Mothership logo badge in bottom-right corner.
+     */
+    private byte[] generateBadgedIcon(Context context, String base64IconStr, int targetSize) {
+        try {
+            Bitmap componentBitmap = null;
+            if (base64IconStr != null && !base64IconStr.isEmpty()) {
+                String cleanBase64 = base64IconStr;
+                if (cleanBase64.contains(",")) {
+                    cleanBase64 = cleanBase64.substring(cleanBase64.indexOf(",") + 1);
+                }
+                byte[] decoded = Base64.decode(cleanBase64, Base64.DEFAULT);
+                componentBitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+            }
+
+            // Get Mothership icon badge from context
+            Bitmap mothershipBadgeBitmap = null;
+            try {
+                android.graphics.drawable.Drawable drawable = context.getPackageManager().getApplicationIcon(context.getPackageName());
+                if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
+                    mothershipBadgeBitmap = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
+                }
+            } catch (Exception ignored) {}
+
+            Bitmap resultBitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(resultBitmap);
+
+            // 1. Pure Black Background Circle (#000000)
+            Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            bgPaint.setColor(0xFF000000);
+            canvas.drawCircle(targetSize / 2f, targetSize / 2f, targetSize / 2f, bgPaint);
+
+            // 2. Draw Component Icon centered (65% inner safe zone)
+            if (componentBitmap != null) {
+                int iconSize = (int) (targetSize * 0.65f);
+                int offset = (targetSize - iconSize) / 2;
+                Rect src = new Rect(0, 0, componentBitmap.getWidth(), componentBitmap.getHeight());
+                Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
+                canvas.drawBitmap(componentBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
+            } else if (mothershipBadgeBitmap != null) {
+                // If no component icon provided, use mothership icon as component icon
+                int iconSize = (int) (targetSize * 0.65f);
+                int offset = (targetSize - iconSize) / 2;
+                Rect src = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
+                Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
+                canvas.drawBitmap(mothershipBadgeBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
+            }
+
+            // 3. Draw Mothership Logo Badge in Bottom-Right Corner (32% size)
+            if (mothershipBadgeBitmap != null) {
+                int badgeSize = (int) (targetSize * 0.32f);
+                int badgeX = targetSize - badgeSize - (int) (targetSize * 0.04f);
+                int badgeY = targetSize - badgeSize - (int) (targetSize * 0.04f);
+
+                // Black outer ring for badge clarity
+                Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                borderPaint.setColor(0xFF000000);
+                canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f, badgeSize / 2f + 4, borderPaint);
+
+                Rect badgeSrc = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
+                Rect badgeDst = new Rect(badgeX, badgeY, badgeX + badgeSize, badgeY + badgeSize);
+                canvas.drawBitmap(mothershipBadgeBitmap, badgeSrc, badgeDst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            resultBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            return baos.toByteArray();
+        } catch (Exception e) {
+            android.util.Log.e("GrexAPKFactory", "[APK Factory] Icon badge generation error: " + e.getMessage(), e);
+            return null;
+        }
     }
 }
