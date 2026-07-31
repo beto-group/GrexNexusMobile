@@ -60,8 +60,12 @@ public class ChildActivity extends Activity {
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
 
-        // No caching — component is bundled fresh at install time
-        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        // Hardware Acceleration & High Render Priority
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
+
+        // V8 Bytecode & Disk Caching — enables instant cold starts
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         // Enable remote DevTools debugging (Chrome → chrome://inspect)
         WebView.setWebContentsDebuggingEnabled(true);
