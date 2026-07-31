@@ -16,7 +16,7 @@
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
         <activity
-            android:name=".ChildActivity"
+            android:name="group.beto.grexnexus.child.ChildActivity"
             android:exported="true"
             android:label="Grex Component Shell Placeholder Target"
             android:hardwareAccelerated="true"
