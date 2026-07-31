@@ -11,7 +11,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="Grex Nexus Mobile"
+        android:label="Grex Nexus"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.NoTitleBar">
 
@@ -29,7 +29,7 @@
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:exported="true"
-            android:label="Grex Nexus Mobile"
+            android:label="Grex Nexus"
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.NoTitleBar">
 
