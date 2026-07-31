@@ -599,37 +599,35 @@ public class HomeScreenPlugin extends Plugin {
             Bitmap resultBitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(resultBitmap);
 
-            // 1. Pure Black Background Circle (#000000)
-            Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            bgPaint.setColor(0xFF000000);
-            canvas.drawCircle(targetSize / 2f, targetSize / 2f, targetSize / 2f, bgPaint);
+            // 1. Pure Black Canvas Fill (#000000)
+            canvas.drawColor(0xFF000000);
 
-            // 2. Draw Component Icon centered (65% inner safe zone)
+            // 2. Draw Component Icon filling the main 75% inner safe zone
             if (componentBitmap != null) {
-                int iconSize = (int) (targetSize * 0.65f);
+                int iconSize = (int) (targetSize * 0.75f);
                 int offset = (targetSize - iconSize) / 2;
                 Rect src = new Rect(0, 0, componentBitmap.getWidth(), componentBitmap.getHeight());
                 Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
                 canvas.drawBitmap(componentBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             } else if (mothershipBadgeBitmap != null) {
-                // If no component icon provided, use mothership icon as component icon
-                int iconSize = (int) (targetSize * 0.65f);
+                int iconSize = (int) (targetSize * 0.75f);
                 int offset = (targetSize - iconSize) / 2;
                 Rect src = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
                 Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
                 canvas.drawBitmap(mothershipBadgeBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             }
 
-            // 3. Draw Mothership Logo Badge in Bottom-Right Corner (32% size)
+            // 3. Draw Mothership Badge Badge inside circular safe zone (bottom-right overlap)
             if (mothershipBadgeBitmap != null) {
-                int badgeSize = (int) (targetSize * 0.32f);
-                int badgeX = targetSize - badgeSize - (int) (targetSize * 0.04f);
-                int badgeY = targetSize - badgeSize - (int) (targetSize * 0.04f);
+                int badgeSize = (int) (targetSize * 0.30f);
+                // Positioned inside the 66% circular mask boundary (center at targetSize * 0.71)
+                int badgeX = (int) (targetSize * 0.56f);
+                int badgeY = (int) (targetSize * 0.56f);
 
-                // Black outer ring for badge clarity
+                // Black outer ring for badge separation
                 Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
                 borderPaint.setColor(0xFF000000);
-                canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f, badgeSize / 2f + 4, borderPaint);
+                canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f, badgeSize / 2f + 6, borderPaint);
 
                 Rect badgeSrc = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
                 Rect badgeDst = new Rect(badgeX, badgeY, badgeX + badgeSize, badgeY + badgeSize);
