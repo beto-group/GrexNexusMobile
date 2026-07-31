@@ -55,13 +55,22 @@
 
         </activity>
 
-        <receiver android:name=".GrexWidgetProvider" android:exported="true">
+        <receiver android:name=".GrexWidgetProvider" android:exported="true" android:label="2x2 Component Launcher">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/grex_widget_info" />
+        </receiver>
+
+        <receiver android:name=".CurrencyWidgetProvider" android:exported="true" android:label="3x1 Currency Ticker">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/currency_widget_info" />
         </receiver>
     </application>
 </manifest>

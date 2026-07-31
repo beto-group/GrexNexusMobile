@@ -151,12 +151,19 @@ public class HomeScreenPlugin extends Plugin {
     @PluginMethod
     public void pinWidget(PluginCall call) {
         String name = call.getString("name", "Grex Component");
+        String type = call.getString("type", "2x2");
         String url = call.getString("url", "");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Context context = getContext();
             AppWidgetManager appWidgetManager = context.getSystemService(AppWidgetManager.class);
-            ComponentName myProvider = new ComponentName(context, GrexWidgetProvider.class);
+
+            ComponentName myProvider;
+            if ("3x1".equalsIgnoreCase(type) || "currency".equalsIgnoreCase(type)) {
+                myProvider = new ComponentName(context, CurrencyWidgetProvider.class);
+            } else {
+                myProvider = new ComponentName(context, GrexWidgetProvider.class);
+            }
 
             if (appWidgetManager != null && appWidgetManager.isRequestPinAppWidgetSupported()) {
                 Bundle extras = new Bundle();

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/currency_widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:background="@drawable/grex_widget_bg">
+
+    <TextView
+        android:id="@+id/currency_widget_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💱 FX"
+        android:textColor="#A855F7"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:layout_marginEnd="10dp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/currency_widget_rate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1 USD = 4.42 MYR"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/currency_widget_sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1 ETH = $3,450.00"
+            android:textColor="#9CA3AF"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/currency_widget_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🟢 Live"
+        android:textColor="#4ADE80"
+        android:textSize="11sp"
+        android:layout_marginStart="8dp" />
+
+</LinearLayout>
