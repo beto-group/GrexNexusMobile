@@ -552,26 +552,25 @@ public class HomeScreenPlugin extends Plugin {
         return result;
     }
 
+
     /**
-     * Mutates the package name string inside AndroidManifest.xml binary string pool.
+     * Mutates the package name in AndroidManifest.xml binary string pool.
+     * CRITICAL: Skips activity class-name occurrences (followed by ".") so the DEX
+     * class loader can still find ChildActivity — only the package attribute is renamed.
      */
     private byte[] mutateManifestPackage(byte[] manifestBytes, String componentName) {
         String targetStr = "group.beto.grexnexus.child.pkgplaceholder00000";
         byte[] targetBytes = new byte[targetStr.length() * 2];
         for (int i = 0; i < targetStr.length(); i++) {
             char c = targetStr.charAt(i);
-            targetBytes[i * 2] = (byte) (c & 0xFF);
-            targetBytes[i * 2 + 1] = (byte) ((c >> 8) & 0xFF);
+            targetBytes[i * 2]     = (byte)(c & 0xFF);
+            targetBytes[i * 2 + 1] = (byte)((c >> 8) & 0xFF);
         }
 
         String safePkgName = "group.beto.grexnexus.child." + componentName.replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
         StringBuilder sb = new StringBuilder(safePkgName);
-        while (sb.length() < targetStr.length()) {
-            sb.append("a");
-        }
-        if (sb.length() > targetStr.length()) {
-            sb.setLength(targetStr.length());
-        }
+        while (sb.length() < targetStr.length()) sb.append("a");
+        if (sb.length() > targetStr.length()) sb.setLength(targetStr.length());
         String paddedPkg = sb.toString();
 
         byte[] result = manifestBytes.clone();
@@ -581,24 +580,32 @@ public class HomeScreenPlugin extends Plugin {
         for (int i = 0; i <= result.length - targetBytes.length; i++) {
             boolean match = true;
             for (int j = 0; j < targetBytes.length; j++) {
-                if (result[i + j] != targetBytes[j]) {
-                    match = false;
-                    break;
-                }
+                if (result[i + j] != targetBytes[j]) { match = false; break; }
             }
-            if (match) {
-                for (int j = 0; j < targetLen; j++) {
-                    char c = paddedPkg.charAt(j);
-                    result[i + j * 2] = (byte) (c & 0xFF);
-                    result[i + j * 2 + 1] = (byte) ((c >> 8) & 0xFF);
-                }
-                replacements++;
+            if (!match) continue;
+
+            // If the next UTF-16LE char is '.' (0x2E 0x00), this is a class name like
+            // "pkgplaceholder00000.ChildActivity" — skip so DEX class loader still works
+            int afterOffset = i + targetBytes.length;
+            if (afterOffset + 1 < result.length
+                    && result[afterOffset] == 0x2E && result[afterOffset + 1] == 0x00) {
+                android.util.Log.d("GrexAPKFactory", "[APK Factory] Skipping activity class-name ref at offset " + i);
+                continue;
             }
+
+            // Replace standalone package reference
+            for (int j = 0; j < targetLen; j++) {
+                char c = paddedPkg.charAt(j);
+                result[i + j * 2]     = (byte)(c & 0xFF);
+                result[i + j * 2 + 1] = (byte)((c >> 8) & 0xFF);
+            }
+            replacements++;
         }
 
         android.util.Log.i("GrexAPKFactory", "[APK Factory] ✓ Mutated Manifest package (" + replacements + " occurrences) to: '" + paddedPkg + "'");
         return result;
     }
+
 
     /**
      * Converts any Drawable (AdaptiveIconDrawable, VectorDrawable, BitmapDrawable) to Bitmap.
