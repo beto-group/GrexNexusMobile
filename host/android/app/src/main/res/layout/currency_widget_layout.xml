@@ -9,14 +9,17 @@
     android:background="@drawable/grex_widget_bg">
 
     <TextView
-        android:id="@+id/currency_widget_badge"
+        android:id="@+id/btn_currency_swap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="💱 FX"
         android:textColor="#A855F7"
         android:textSize="13sp"
         android:textStyle="bold"
-        android:layout_marginEnd="10dp" />
+        android:padding="6dp"
+        android:background="#20ffffff"
+        android:layout_marginEnd="10dp"
+        android:clickable="true" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -47,12 +50,15 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/currency_widget_status"
+        android:id="@+id/btn_currency_refresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="🟢 Live"
+        android:text="🔄 Live"
         android:textColor="#4ADE80"
         android:textSize="11sp"
-        android:layout_marginStart="8dp" />
+        android:padding="6dp"
+        android:background="#20ffffff"
+        android:layout_marginStart="8dp"
+        android:clickable="true" />
 
 </LinearLayout>
