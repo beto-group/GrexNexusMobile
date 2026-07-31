@@ -622,10 +622,14 @@ public class HomeScreenPlugin extends Plugin {
     }
 
     /**
-     * Generates a custom component icon with the Mothership logo badge in bottom-right corner.
+     * Generates a custom component icon:
+     * - Full-bleed black circle (transparent corners → launcher shows black edge, not white)
+     * - Component vector icon in 70% inner safe zone
+     * - Official BETO.888 triquetra badge in black circular container, bottom-right
      */
     private byte[] generateBadgedIcon(Context context, String base64IconStr, int targetSize) {
         try {
+            // Decode component icon from Base64 if provided
             Bitmap componentBitmap = null;
             if (base64IconStr != null && !base64IconStr.isEmpty()) {
                 String cleanBase64 = base64IconStr;
@@ -636,67 +640,72 @@ public class HomeScreenPlugin extends Plugin {
                 componentBitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
             }
 
-            // Get Mothership icon badge from R.drawable.mothership_badge directly
+            // Load official BETO Mothership badge
             Bitmap mothershipBadgeBitmap = null;
             try {
                 mothershipBadgeBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.mothership_badge);
             } catch (Exception e) {
-                android.util.Log.w("GrexAPKFactory", "[APK Factory] Could not load R.drawable.mothership_badge resource: " + e.getMessage());
+                android.util.Log.w("GrexAPKFactory", "[APK Factory] Could not load mothership_badge: " + e.getMessage());
             }
 
             Bitmap resultBitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(resultBitmap);
 
-            // 1. Pure Black Canvas Fill (#000000)
-            canvas.drawColor(0xFF000000);
+            // Step 1: Fully transparent start (corners = transparent → launcher clips to black circle)
+            canvas.drawColor(0x00000000);
 
-            // 2. Draw Component Icon filling the main 70% inner safe zone
+            // Step 2: Full-bleed pure black circle edge-to-edge
+            float half = targetSize / 2f;
+            Paint blackCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            blackCirclePaint.setColor(0xFF000000);
+            canvas.drawCircle(half, half, half, blackCirclePaint);
+
+            // Step 3: Clip subsequent drawing inside the circle
+            android.graphics.Path clipPath = new android.graphics.Path();
+            clipPath.addCircle(half, half, half, android.graphics.Path.Direction.CW);
+            canvas.clipPath(clipPath);
+
+            // Step 4: Draw component icon in 70% safe zone (centred)
             if (componentBitmap != null) {
-                int iconSize = (int) (targetSize * 0.70f);
-                int offset = (targetSize - iconSize) / 2;
-                Rect src = new Rect(0, 0, componentBitmap.getWidth(), componentBitmap.getHeight());
-                Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
-                canvas.drawBitmap(componentBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
+                int sz = (int)(targetSize * 0.70f);
+                int off = (targetSize - sz) / 2;
+                canvas.drawBitmap(componentBitmap,
+                    new Rect(0, 0, componentBitmap.getWidth(), componentBitmap.getHeight()),
+                    new Rect(off, off, off + sz, off + sz),
+                    new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             } else if (mothershipBadgeBitmap != null) {
-                int iconSize = (int) (targetSize * 0.70f);
-                int offset = (targetSize - iconSize) / 2;
-                Rect src = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
-                Rect dst = new Rect(offset, offset, offset + iconSize, offset + iconSize);
-                canvas.drawBitmap(mothershipBadgeBitmap, src, dst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
+                int sz = (int)(targetSize * 0.70f);
+                int off = (targetSize - sz) / 2;
+                canvas.drawBitmap(mothershipBadgeBitmap,
+                    new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight()),
+                    new Rect(off, off, off + sz, off + sz),
+                    new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             }
 
-            // 3. Draw Mothership Badge inside a clean circular background container in bottom-right corner
+            // Step 5: BETO triquetra badge in black circle container, bottom-right
             if (mothershipBadgeBitmap != null) {
-                int badgeContainerSize = (int) (targetSize * 0.34f);
-                int badgeX = (int) (targetSize * 0.54f);
-                int badgeY = (int) (targetSize * 0.54f);
+                int csz  = (int)(targetSize * 0.34f);
+                int bx   = (int)(targetSize * 0.54f);
+                int by   = (int)(targetSize * 0.54f);
+                float cx = bx + csz / 2f;
+                float cy = by + csz / 2f;
+                float r  = csz / 2f;
 
-                float centerX = badgeX + badgeContainerSize / 2f;
-                float centerY = badgeY + badgeContainerSize / 2f;
-                float radius = badgeContainerSize / 2f;
+                Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                bgPaint.setColor(0xFF000000);
+                canvas.drawCircle(cx, cy, r + 4, bgPaint);
 
-                // A. Draw Pure Black (#000000) circular background container
-                Paint bgContainerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                bgContainerPaint.setColor(0xFF000000);
-                canvas.drawCircle(centerX, centerY, radius + 4, bgContainerPaint);
-
-                // B. Draw subtle border ring (#333333) around badge container
                 Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
                 ringPaint.setColor(0xFF222222);
                 ringPaint.setStyle(Paint.Style.STROKE);
                 ringPaint.setStrokeWidth(3f);
-                canvas.drawCircle(centerX, centerY, radius + 3, ringPaint);
+                canvas.drawCircle(cx, cy, r + 3, ringPaint);
 
-                // C. Draw official BETO Mothership Emblem centered inside container
-                int innerPadding = (int) (badgeContainerSize * 0.12f);
-                Rect badgeSrc = new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight());
-                Rect badgeDst = new Rect(
-                    badgeX + innerPadding,
-                    badgeY + innerPadding,
-                    badgeX + badgeContainerSize - innerPadding,
-                    badgeY + badgeContainerSize - innerPadding
-                );
-                canvas.drawBitmap(mothershipBadgeBitmap, badgeSrc, badgeDst, new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
+                int pad = (int)(csz * 0.12f);
+                canvas.drawBitmap(mothershipBadgeBitmap,
+                    new Rect(0, 0, mothershipBadgeBitmap.getWidth(), mothershipBadgeBitmap.getHeight()),
+                    new Rect(bx + pad, by + pad, bx + csz - pad, by + csz - pad),
+                    new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG));
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
