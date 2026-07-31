@@ -12,13 +12,13 @@
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="Grex Component"
+        android:label="Grex Component Shell Placeholder Target"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
         <activity
             android:name=".ChildActivity"
             android:exported="true"
-            android:label="Grex Component"
+            android:label="Grex Component Shell Placeholder Target"
             android:hardwareAccelerated="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:launchMode="singleTask">

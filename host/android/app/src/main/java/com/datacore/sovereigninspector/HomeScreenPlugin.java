@@ -502,7 +502,7 @@ public class HomeScreenPlugin extends Plugin {
      * Mutates the app_name string inside AndroidManifest.xml binary string pool.
      */
     private byte[] mutateManifestLabel(byte[] manifestBytes, String newLabel) {
-        String targetStr = "Grex Component";
+        String targetStr = "Grex Component Shell Placeholder Target";
         byte[] targetBytes = new byte[targetStr.length() * 2];
         for (int i = 0; i < targetStr.length(); i++) {
             char c = targetStr.charAt(i);
@@ -526,25 +526,28 @@ public class HomeScreenPlugin extends Plugin {
         }
 
         if (offset == -1) {
+            android.util.Log.w("GrexAPKFactory", "[APK Factory] ⚠️ Label placeholder not found in manifest");
             return manifestBytes;
         }
 
+        int targetLen = targetStr.length();
         StringBuilder sb = new StringBuilder(newLabel);
-        while (sb.length() < 14) {
+        while (sb.length() < targetLen) {
             sb.append(" ");
         }
-        if (sb.length() > 14) {
-            sb.setLength(14);
+        if (sb.length() > targetLen) {
+            sb.setLength(targetLen);
         }
         String paddedLabel = sb.toString();
 
         byte[] result = manifestBytes.clone();
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < targetLen; i++) {
             char c = paddedLabel.charAt(i);
             result[offset + i * 2] = (byte) (c & 0xFF);
             result[offset + i * 2 + 1] = (byte) ((c >> 8) & 0xFF);
         }
 
+        android.util.Log.i("GrexAPKFactory", "[APK Factory] ✓ Mutated Manifest label to: '" + paddedLabel.trim() + "'");
         return result;
     }
 
