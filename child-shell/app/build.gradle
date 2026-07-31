@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'group.beto.grexnexus.child'
+    namespace 'group.beto.grexnexus.child.pkgplaceholder00000'
     compileSdk 34
 
     defaultConfig {
-        applicationId "group.beto.grexnexus.child"
+        applicationId "group.beto.grexnexus.child.pkgplaceholder00000"
         minSdk 26
         targetSdk 34
         versionCode 1

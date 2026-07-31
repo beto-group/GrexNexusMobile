@@ -262,7 +262,7 @@ public class HomeScreenPlugin extends Plugin {
                         continue;
                     }
 
-                    // Mutate AndroidManifest.xml app label
+                    // Mutate AndroidManifest.xml app label + package name
                     if (entryName.equals("AndroidManifest.xml")) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         int len;
@@ -271,6 +271,7 @@ public class HomeScreenPlugin extends Plugin {
                         }
                         byte[] manifestBytes = baos.toByteArray();
                         byte[] mutatedManifest = mutateManifestLabel(manifestBytes, componentLabel);
+                        mutatedManifest = mutateManifestPackage(mutatedManifest, componentName);
 
                         ZipEntry newEntry = new ZipEntry(entryName);
                         zos.putNextEntry(newEntry);
@@ -552,6 +553,54 @@ public class HomeScreenPlugin extends Plugin {
     }
 
     /**
+     * Mutates the package name string inside AndroidManifest.xml binary string pool.
+     */
+    private byte[] mutateManifestPackage(byte[] manifestBytes, String componentName) {
+        String targetStr = "group.beto.grexnexus.child.pkgplaceholder00000";
+        byte[] targetBytes = new byte[targetStr.length() * 2];
+        for (int i = 0; i < targetStr.length(); i++) {
+            char c = targetStr.charAt(i);
+            targetBytes[i * 2] = (byte) (c & 0xFF);
+            targetBytes[i * 2 + 1] = (byte) ((c >> 8) & 0xFF);
+        }
+
+        String safePkgName = "group.beto.grexnexus.child." + componentName.replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+        StringBuilder sb = new StringBuilder(safePkgName);
+        while (sb.length() < targetStr.length()) {
+            sb.append("a");
+        }
+        if (sb.length() > targetStr.length()) {
+            sb.setLength(targetStr.length());
+        }
+        String paddedPkg = sb.toString();
+
+        byte[] result = manifestBytes.clone();
+        int replacements = 0;
+        int targetLen = targetStr.length();
+
+        for (int i = 0; i <= result.length - targetBytes.length; i++) {
+            boolean match = true;
+            for (int j = 0; j < targetBytes.length; j++) {
+                if (result[i + j] != targetBytes[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                for (int j = 0; j < targetLen; j++) {
+                    char c = paddedPkg.charAt(j);
+                    result[i + j * 2] = (byte) (c & 0xFF);
+                    result[i + j * 2 + 1] = (byte) ((c >> 8) & 0xFF);
+                }
+                replacements++;
+            }
+        }
+
+        android.util.Log.i("GrexAPKFactory", "[APK Factory] ✓ Mutated Manifest package (" + replacements + " occurrences) to: '" + paddedPkg + "'");
+        return result;
+    }
+
+    /**
      * Converts any Drawable (AdaptiveIconDrawable, VectorDrawable, BitmapDrawable) to Bitmap.
      */
     private Bitmap drawableToBitmap(android.graphics.drawable.Drawable drawable, int width, int height) {
@@ -587,13 +636,15 @@ public class HomeScreenPlugin extends Plugin {
                 componentBitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
             }
 
-            // Get Mothership icon badge from context (handles AdaptiveIconDrawable on Android 8+)
+            // Get Mothership icon badge from drawable resource (R.drawable.mothership_badge)
             Bitmap mothershipBadgeBitmap = null;
             try {
-                android.graphics.drawable.Drawable drawable = context.getPackageManager().getApplicationIcon(context.getPackageName());
-                mothershipBadgeBitmap = drawableToBitmap(drawable, targetSize, targetSize);
+                int resId = context.getResources().getIdentifier("mothership_badge", "drawable", context.getPackageName());
+                if (resId != 0) {
+                    mothershipBadgeBitmap = BitmapFactory.decodeResource(context.getResources(), resId);
+                }
             } catch (Exception e) {
-                android.util.Log.w("GrexAPKFactory", "[APK Factory] Could not load mothership application icon: " + e.getMessage());
+                android.util.Log.w("GrexAPKFactory", "[APK Factory] Could not load mothership_badge resource: " + e.getMessage());
             }
 
             Bitmap resultBitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888);
