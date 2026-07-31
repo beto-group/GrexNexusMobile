@@ -636,15 +636,12 @@ public class HomeScreenPlugin extends Plugin {
                 componentBitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
             }
 
-            // Get Mothership icon badge from drawable resource (R.drawable.mothership_badge)
+            // Get Mothership icon badge from R.drawable.mothership_badge directly
             Bitmap mothershipBadgeBitmap = null;
             try {
-                int resId = context.getResources().getIdentifier("mothership_badge", "drawable", context.getPackageName());
-                if (resId != 0) {
-                    mothershipBadgeBitmap = BitmapFactory.decodeResource(context.getResources(), resId);
-                }
+                mothershipBadgeBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.mothership_badge);
             } catch (Exception e) {
-                android.util.Log.w("GrexAPKFactory", "[APK Factory] Could not load mothership_badge resource: " + e.getMessage());
+                android.util.Log.w("GrexAPKFactory", "[APK Factory] Could not load R.drawable.mothership_badge resource: " + e.getMessage());
             }
 
             Bitmap resultBitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888);
