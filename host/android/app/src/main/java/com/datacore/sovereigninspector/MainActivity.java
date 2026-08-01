@@ -3,7 +3,6 @@ package com.datacore.sovereigninspector;
 import android.os.Bundle;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
-import androidx.activity.OnBackPressedCallback;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -16,19 +15,26 @@ public class MainActivity extends BridgeActivity {
                 this.bridge.getWebView().clearCache(true);
             }
         } catch (Exception e) {}
+    }
 
-        // Native Android Back Button Interceptor for Single Page Navigation
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                if (bridge != null && bridge.getWebView() != null) {
-                    // Trigger custom 'backButton' JS event to Capacitor Web App
-                    bridge.triggerJSEvent("backButton", "document");
-                } else {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
-                }
-            }
-        });
+    /**
+     * Intercept Android 3-button navigation bar Back button press completely.
+     * Prevents Android OS from closing/minimizing the Mothership application
+     * when navigating single page component views.
+     */
+    @Override
+    public void onBackPressed() {
+        if (this.bridge != null && this.bridge.getWebView() != null) {
+            this.bridge.getWebView().evaluateJavascript(
+                "javascript:(function(){" +
+                "  var evt = new CustomEvent('nativeAndroidBackButton');" +
+                "  window.dispatchEvent(evt);" +
+                "  document.dispatchEvent(evt);" +
+                "})();",
+                null
+            );
+        } else {
+            super.onBackPressed();
+        }
     }
 }
