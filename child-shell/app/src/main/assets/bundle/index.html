@@ -23,10 +23,35 @@
     <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
   </div>
   <script type="module">
-    // GREX CHILD SHELL — TEMPLATE BOOTLOADER
-    // This file is replaced by HomeScreenPlugin.installChildApk() during APK factory mutation.
-    // The real bootloader will import mount_app from ./bundle.es.js and mount the component.
-    console.warn('[GrexChildShell] Placeholder bootloader loaded. Template APK not yet mutated.');
+    const platformAPI = {
+      isStandalone: true,
+      componentId: 'GrexComponent',
+      componentLabel: 'Grex Component',
+      host: 'android-child'
+    };
+    try {
+      let moduleToMount;
+      const cachedJs = localStorage.getItem('grex_hot_bundle_GrexComponent');
+      if (cachedJs && cachedJs.length > 100) {
+        console.log('[GrexChildShell] Booting dynamically from hot-bundle cache...');
+        const blob = new Blob([cachedJs], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        moduleToMount = await import(blobUrl);
+      } else {
+        moduleToMount = await import('./bundle.es.js');
+      }
+      const mountFn = moduleToMount.mount_app || (moduleToMount.default && moduleToMount.default.mount_app);
+      if (typeof mountFn === 'function') {
+        await mountFn(document.getElementById('grex-root'), platformAPI);
+      } else {
+        throw new Error('Bundle does not export a mount_app function.');
+      }
+    } catch (err) {
+      console.error('[GrexChildShell] Boot error:', err);
+      document.getElementById('grex-root').innerHTML =
+        '<div style="color:#ef4444;padding:24px;font-family:monospace;font-size:12px;">' +
+        '<strong>[GrexChildShell] mount_app error:</strong><br>' + err.message + '</div>';
+    }
   </script>
 </body>
 </html>
