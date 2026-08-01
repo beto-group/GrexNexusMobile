@@ -194,6 +194,80 @@ public class HomeScreenPlugin extends Plugin {
     // ─── APK Factory: Clone + Inject + Install ───────────────────────────────
 
     /**
+     * downloadAndInstallApk — Downloads an APK URL directly on a background Thread
+     * and launches the native Android Package Installer.
+     * Used by Mothership Self-Updater to download release APKs directly without WebWorker memory bounds.
+     */
+    @PluginMethod
+    public void downloadAndInstallApk(PluginCall call) {
+        String urlStr = call.getString("url", "");
+        String apkName = call.getString("name", "MothershipUpdate");
+        String token = call.getString("token", "");
+        Context context = getContext();
+
+        if (urlStr == null || urlStr.isEmpty()) {
+            JSObject ret = new JSObject();
+            ret.put("success", false);
+            ret.put("error", "url is required.");
+            call.resolve(ret);
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                File outputDir = new File(context.getCacheDir(), "ApkUpdates");
+                //noinspection ResultOfMethodCallIgnored
+                outputDir.mkdirs();
+
+                File targetApk = new File(outputDir, apkName.replaceAll("[^a-zA-Z0-9_]", "") + ".apk");
+
+                java.net.URL url = new java.net.URL(urlStr);
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setInstanceFollowRedirects(true);
+                conn.setRequestProperty("Accept", "application/octet-stream");
+                if (token != null && !token.isEmpty()) {
+                    conn.setRequestProperty("Authorization", "token " + token);
+                }
+
+                int responseCode = conn.getResponseCode();
+                // Handle HTTP redirects (301, 302, 307, 308) to S3 storage
+                if (responseCode == java.net.HttpURLConnection.HTTP_MOVED_TEMP
+                        || responseCode == java.net.HttpURLConnection.HTTP_MOVED_PERM
+                        || responseCode == 307 || responseCode == 308) {
+                    String redirectUrl = conn.getHeaderField("Location");
+                    if (redirectUrl != null && !redirectUrl.isEmpty()) {
+                        conn.disconnect();
+                        url = new java.net.URL(redirectUrl);
+                        conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setInstanceFollowRedirects(true);
+                    }
+                }
+
+                InputStream in = conn.getInputStream();
+                FileOutputStream out = new FileOutputStream(targetApk);
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+                out.flush();
+                out.close();
+                in.close();
+                conn.disconnect();
+
+                android.util.Log.i("GrexMothershipUpdater", "✓ Downloaded APK (" + targetApk.length() / 1024 + " KB) to " + targetApk.getAbsolutePath());
+                getActivity().runOnUiThread(() -> triggerInstaller(call, context, targetApk));
+            } catch (Exception e) {
+                android.util.Log.e("GrexMothershipUpdater", "✗ APK Download error: " + e.getMessage(), e);
+                JSObject ret = new JSObject();
+                ret.put("success", false);
+                ret.put("error", "Download failed: " + e.getMessage());
+                call.resolve(ret);
+            }
+        }).start();
+    }
+
+    /**
      * installRawApk — Installs a raw APK file from base64 string.
      * Used by Mothership Self-Updater to trigger 1-tap APK update.
      */
