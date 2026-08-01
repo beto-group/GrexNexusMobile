@@ -1,6 +1,7 @@
 package group.beto.grexnexus.child;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
@@ -73,8 +74,15 @@ public class ChildActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                // Keep all navigation within the WebView
                 return false;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (pendingSharedText != null) {
+                    dispatchSharedTextToJs(pendingSharedText);
+                }
             }
         });
 
@@ -83,6 +91,50 @@ public class ChildActivity extends Activity {
         // Load the injected bootloader — this file is replaced by the mothership
         // during APK factory ZIP mutation before installation
         webView.loadUrl("file:///android_asset/bundle/index.html");
+
+        // Handle cold-start intent
+        handleSendIntent(getIntent());
+    }
+
+    private String pendingSharedText = null;
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleSendIntent(intent);
+    }
+
+    private void handleSendIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if ("text/plain".equals(type) || type.startsWith("text/")) {
+                String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                if (sharedText == null) {
+                    sharedText = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+                }
+                if (sharedText != null) {
+                    pendingSharedText = sharedText;
+                    dispatchSharedTextToJs(sharedText);
+                }
+            }
+        }
+    }
+
+    private void dispatchSharedTextToJs(String text) {
+        if (webView == null || text == null) return;
+        try {
+            org.json.JSONObject payload = new org.json.JSONObject();
+            payload.put("text", text);
+            payload.put("timestamp", System.currentTimeMillis());
+            String js = "window.dispatchEvent(new CustomEvent('grexShareReceived', { detail: " + payload.toString() + " }));";
+            webView.post(() -> webView.evaluateJavascript(js, null));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
