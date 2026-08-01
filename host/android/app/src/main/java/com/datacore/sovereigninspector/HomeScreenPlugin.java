@@ -194,6 +194,48 @@ public class HomeScreenPlugin extends Plugin {
     // ─── APK Factory: Clone + Inject + Install ───────────────────────────────
 
     /**
+     * installRawApk — Installs a raw APK file from base64 string.
+     * Used by Mothership Self-Updater to trigger 1-tap APK update.
+     */
+    @PluginMethod
+    public void installRawApk(PluginCall call) {
+        String base64Apk = call.getString("base64Apk", "");
+        String apkName = call.getString("name", "MothershipUpdate");
+        Context context = getContext();
+
+        if (base64Apk == null || base64Apk.isEmpty()) {
+            JSObject ret = new JSObject();
+            ret.put("success", false);
+            ret.put("error", "base64Apk is required.");
+            call.resolve(ret);
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                File outputDir = new File(context.getCacheDir(), "ApkUpdates");
+                //noinspection ResultOfMethodCallIgnored
+                outputDir.mkdirs();
+
+                File targetApk = new File(outputDir, apkName.replaceAll("[^a-zA-Z0-9_]", "") + ".apk");
+                byte[] bytes = android.util.Base64.decode(base64Apk, android.util.Base64.DEFAULT);
+
+                FileOutputStream fos = new FileOutputStream(targetApk);
+                fos.write(bytes);
+                fos.flush();
+                fos.close();
+
+                getActivity().runOnUiThread(() -> triggerInstaller(call, context, targetApk));
+            } catch (Exception e) {
+                JSObject ret = new JSObject();
+                ret.put("success", false);
+                ret.put("error", e.getMessage());
+                call.resolve(ret);
+            }
+        }).start();
+    }
+
+    /**
      * installChildApk — Generates and installs a standalone component APK.
      *
      * Called from JS via:
