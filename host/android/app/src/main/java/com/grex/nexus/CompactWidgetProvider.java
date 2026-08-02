@@ -1,4 +1,4 @@
-package com.datacore.sovereigninspector;
+package com.grex.nexus;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;

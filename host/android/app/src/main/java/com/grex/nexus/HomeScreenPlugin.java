@@ -1,4 +1,4 @@
-package com.datacore.sovereigninspector;
+package com.grex.nexus;
 
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;

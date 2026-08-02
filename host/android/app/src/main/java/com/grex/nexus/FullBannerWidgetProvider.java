@@ -1,4 +1,4 @@
-package com.datacore.sovereigninspector;
+package com.grex.nexus;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -10,7 +10,7 @@ import android.widget.RemoteViews;
 
 public class FullBannerWidgetProvider extends AppWidgetProvider {
 
-    public static final String ACTION_BANNER_CYCLE = "com.datacore.sovereigninspector.BANNER_CYCLE";
+    public static final String ACTION_BANNER_CYCLE = "com.grex.nexus.BANNER_CYCLE";
 
     private static int bannerIdx = 0;
     private static final String[] TICKERS = {

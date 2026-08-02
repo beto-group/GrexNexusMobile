@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.datacore.sovereigninspector'
+    namespace 'com.grex.nexus'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.datacore.sovereigninspector"
+        applicationId "com.grex.nexus"
         minSdk 26
         targetSdk 34
         versionCode 1

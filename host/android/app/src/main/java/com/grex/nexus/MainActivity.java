@@ -1,4 +1,4 @@
-package com.datacore.sovereigninspector;
+package com.grex.nexus;
 
 import android.os.Bundle;
 import android.webkit.WebView;

@@ -1,4 +1,4 @@
-package com.datacore.sovereigninspector;
+package com.grex.nexus;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -10,8 +10,8 @@ import android.widget.RemoteViews;
 
 public class GrexWidgetProvider extends AppWidgetProvider {
 
-    public static final String ACTION_TOGGLE_AUTO_REPLY = "com.datacore.sovereigninspector.TOGGLE_AUTO_REPLY";
-    public static final String ACTION_REFRESH_WIDGET = "com.datacore.sovereigninspector.REFRESH_WIDGET";
+    public static final String ACTION_TOGGLE_AUTO_REPLY = "com.grex.nexus.TOGGLE_AUTO_REPLY";
+    public static final String ACTION_REFRESH_WIDGET = "com.grex.nexus.REFRESH_WIDGET";
 
     private static boolean isAutoReplyActive = true;
     private static int processedDmsCount = 148;

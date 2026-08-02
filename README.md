@@ -1,7 +1,7 @@
 # 📱 GrexNexusMobile — Datacore Sovereign Inspector & Mobile Runtime (Android & iOS)
 
 > **Version**: `v38.0.0`  
-> **Bundle Identifier / Package Name**: `com.datacore.sovereigninspector`  
+> **Bundle Identifier / Package Name**: `com.grex.nexus`  
 > **Architecture**: Capacitor Android & iOS Native Shell + Child-Shell Standalone Subsystem  
 
 `GrexNexusMobile` is the official native mobile runtime and host container for the **Datacore Grex Sovereign Ecosystem**. It provides a high-performance, zero-latency mobile environment to dynamically load, execute, and monitor Sovereign Component Bundles (`.grex` / React micro-apps) natively on Android and iOS devices.
@@ -37,7 +37,7 @@ Allows AI coding agents to control, build, test, and inspect the app live on App
 ```
 GrexNexusMobile/
 ├── host/
-│   ├── android/                     # Mothership Host Android Project (com.datacore.sovereigninspector)
+│   ├── android/                     # Mothership Host Android Project (com.grex.nexus)
 │   │   ├── app/src/main/java/       # Native Java Plugins & Activity Overrides
 │   │   └── app/src/main/assets/     # Embedded Web Dist & Child-Shell Template
 │   └── ios/                         # Mothership Host iOS Xcode Workspace
@@ -102,7 +102,7 @@ GrexNexusMobile/
    ```bash
    xcodebuild -workspace App.xcworkspace -scheme App -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Plus' -derivedDataPath build build
    xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/App.app
-   xcrun simctl launch booted com.datacore.sovereigninspector
+   xcrun simctl launch booted com.grex.nexus
    ```
 
 ---

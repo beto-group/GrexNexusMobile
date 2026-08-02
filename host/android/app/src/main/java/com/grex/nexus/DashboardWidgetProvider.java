@@ -1,4 +1,4 @@
-package com.datacore.sovereigninspector;
+package com.grex.nexus;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -10,7 +10,7 @@ import android.widget.RemoteViews;
 
 public class DashboardWidgetProvider extends AppWidgetProvider {
 
-    public static final String ACTION_DASH_REFRESH = "com.datacore.sovereigninspector.DASH_REFRESH";
+    public static final String ACTION_DASH_REFRESH = "com.grex.nexus.DASH_REFRESH";
 
     private static int totalDms = 148;
 

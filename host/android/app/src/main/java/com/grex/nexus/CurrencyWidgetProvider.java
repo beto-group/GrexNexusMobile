@@ -1,4 +1,4 @@
-package com.datacore.sovereigninspector;
+package com.grex.nexus;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -19,9 +19,9 @@ import java.util.Locale;
  */
 public class CurrencyWidgetProvider extends AppWidgetProvider {
 
-    public static final String ACTION_CYCLE_PAIR = "com.datacore.sovereigninspector.CYCLE_PAIR";
-    public static final String ACTION_CYCLE_AMOUNT = "com.datacore.sovereigninspector.CYCLE_AMOUNT";
-    public static final String ACTION_TOGGLE_DIRECTION = "com.datacore.sovereigninspector.TOGGLE_DIRECTION";
+    public static final String ACTION_CYCLE_PAIR = "com.grex.nexus.CYCLE_PAIR";
+    public static final String ACTION_CYCLE_AMOUNT = "com.grex.nexus.CYCLE_AMOUNT";
+    public static final String ACTION_TOGGLE_DIRECTION = "com.grex.nexus.TOGGLE_DIRECTION";
 
     private static int pairIndex = 0;
     private static int amountIndex = 1; // Default $100
