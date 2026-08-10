@@ -9,9 +9,18 @@ import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * GrexChildShell — Standalone Datacore Component Host
@@ -72,7 +81,7 @@ public class ChildActivity extends Activity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         // Enable Mixed Content & Cookies for local HTTP/HTTPS backend connection
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
             android.webkit.CookieManager.getInstance().setAcceptCookie(true);
@@ -91,12 +100,87 @@ public class ChildActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return false;
+                return false; // all URLs load inside this WebView
             }
 
             @Override
             public void onReceivedSslError(WebView view, android.webkit.SslErrorHandler handler, android.net.http.SslError error) {
-                handler.proceed();
+                handler.proceed(); // trust local LAN self-signed certs
+            }
+
+            /**
+             * Intercept every response and strip headers that would block the page.
+             * This is exactly what Capacitor does — it proxies responses and removes:
+             *   X-Frame-Options, X-Content-Type-Options, Content-Security-Policy
+             * Without this, X-Frame-Options:SAMEORIGIN causes ERR_BLOCKED_BY_RESPONSE
+             * when loading an http:// backend from a file:// origin.
+             */
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                String urlStr = request.getUrl().toString();
+                // Only intercept http/https requests (not file:// assets)
+                if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) {
+                    return super.shouldInterceptRequest(view, request);
+                }
+                try {
+                    URL url = new URL(urlStr);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setConnectTimeout(8000);
+                    conn.setReadTimeout(15000);
+                    conn.setInstanceFollowRedirects(true);
+                    conn.setRequestMethod(request.getMethod());
+                    // Forward request headers (cookies, auth, etc.)
+                    for (Map.Entry<String, String> h : request.getRequestHeaders().entrySet()) {
+                        conn.setRequestProperty(h.getKey(), h.getValue());
+                    }
+                    conn.connect();
+
+                    // Build cleaned response headers — drop the blocking ones
+                    Map<String, String> responseHeaders = new HashMap<>();
+                    for (Map.Entry<String, List<String>> entry : conn.getHeaderFields().entrySet()) {
+                        String key = entry.getKey();
+                        if (key == null) continue;
+                        String lkey = key.toLowerCase();
+                        // Drop headers that block cross-origin frame loading
+                        if (lkey.equals("x-frame-options") ||
+                            lkey.equals("x-content-type-options") ||
+                            lkey.equals("content-security-policy") ||
+                            lkey.equals("content-security-policy-report-only")) {
+                            continue;
+                        }
+                        List<String> vals = entry.getValue();
+                        if (vals != null && !vals.isEmpty()) {
+                            responseHeaders.put(key, vals.get(0));
+                        }
+                    }
+
+                    int statusCode = conn.getResponseCode();
+                    String mimeType = conn.getContentType();
+                    if (mimeType == null) mimeType = "text/plain";
+                    // Strip charset from mime for WebResourceResponse
+                    String charset = "utf-8";
+                    if (mimeType.contains(";")) {
+                        String[] parts = mimeType.split(";");
+                        mimeType = parts[0].trim();
+                        for (String p : parts) {
+                            if (p.trim().toLowerCase().startsWith("charset=")) {
+                                charset = p.trim().substring(8).trim();
+                            }
+                        }
+                    }
+
+                    InputStream stream = statusCode >= 400 ? conn.getErrorStream() : conn.getInputStream();
+                    if (stream == null) stream = new java.io.ByteArrayInputStream(new byte[0]);
+
+                    return new WebResourceResponse(
+                        mimeType, charset, statusCode,
+                        statusCode == 200 ? "OK" : "Error",
+                        responseHeaders, stream
+                    );
+                } catch (IOException e) {
+                    // Network error — fall through to default WebView handling
+                    return super.shouldInterceptRequest(view, request);
+                }
             }
 
             @Override
