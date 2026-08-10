@@ -1,18 +1,33 @@
 package group.beto.grexnexus.child;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.PictureInPictureParams;
+import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.text.InputType;
+import android.util.Rational;
+import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,27 +40,38 @@ import java.util.Map;
 /**
  * GrexChildShell — Standalone Datacore Component Host
  *
- * This is a minimal, pure-Android WebView host that loads a single
- * Datacore component bundle injected at the assets/bundle/ path.
+ * Minimal pure-Android WebView host for a single Datacore component bundle.
+ * Injected at assets/bundle/ path by GrexNexusMobile mothership during install.
  *
- * The APK containing this activity is used as a template by the
- * GrexNexusMobile mothership app. The mothership clones this APK,
- * injects the component's bundle.es.js + bootloader index.html into
- * the assets/bundle/ ZIP entries, and triggers native installation.
- *
- * Template APK path in mothership: assets/child_shell_template.apk
- *
- * Package: group.beto.grexnexus.child (separate from mothership group.beto.grexnexus)
+ * Key features:
+ *  - Native shouldInterceptRequest strips X-Frame-Options / CSP (mirrors Capacitor)
+ *  - Native triple-tap overlay above the iframe → settings dialog
+ *  - SharedPreferences backed host/port → exposed via grexNativeBridge JS interface
+ *  - Floating bubble service integration
  */
 public class ChildActivity extends Activity {
 
+    private static final String PREFS = "grex_child_prefs";
+    private static final String PREF_HOST = "hermes_webui_host";
+    private static final String PREF_PORT = "hermes_webui_port";
+    private static final String DEFAULT_HOST = "192.168.1.160";
+    private static final String DEFAULT_PORT = "8787";
+
     private WebView webView;
+    private SharedPreferences prefs;
+
+    // Triple-tap detection state
+    private int tapCount = 0;
+    private long lastTapTime = 0;
+    private static final int TRIPLE_TAP_TIMEOUT_MS = 500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Truly fullscreen — no title bar, no status bar
+        prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+
+        // Truly fullscreen
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().getDecorView().setSystemUiVisibility(
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
@@ -54,40 +80,33 @@ public class ChildActivity extends Activity {
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         );
 
-        webView = new WebView(this);
+        // Root layout: WebView + transparent touch overlay stacked
+        FrameLayout root = new FrameLayout(this);
 
+        // ── WebView ──────────────────────────────────────────────────────────
+        webView = new WebView(this);
         WebSettings settings = webView.getSettings();
 
-        // Core JS + Storage
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-
-        // File access — required for ES module imports from file:///android_asset/
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         settings.setAllowFileAccessFromFileURLs(true);
         settings.setAllowUniversalAccessFromFileURLs(true);
-
-        // Viewport
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
-
-        // Hardware Acceleration & High Render Priority
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
-
-        // V8 Bytecode & Disk Caching — enables instant cold starts
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-        // Enable Mixed Content & Cookies for local HTTP/HTTPS backend connection
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
             android.webkit.CookieManager.getInstance().setAcceptCookie(true);
         }
 
-        // Enable remote DevTools debugging (Chrome → chrome://inspect)
         WebView.setWebContentsDebuggingEnabled(true);
 
         webView.setWebChromeClient(new android.webkit.WebChromeClient() {
@@ -100,25 +119,22 @@ public class ChildActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return false; // all URLs load inside this WebView
+                return false;
             }
 
             @Override
             public void onReceivedSslError(WebView view, android.webkit.SslErrorHandler handler, android.net.http.SslError error) {
-                handler.proceed(); // trust local LAN self-signed certs
+                handler.proceed();
             }
 
             /**
-             * Intercept every response and strip headers that would block the page.
-             * This is exactly what Capacitor does — it proxies responses and removes:
-             *   X-Frame-Options, X-Content-Type-Options, Content-Security-Policy
-             * Without this, X-Frame-Options:SAMEORIGIN causes ERR_BLOCKED_BY_RESPONSE
-             * when loading an http:// backend from a file:// origin.
+             * Strip X-Frame-Options / CSP / X-Content-Type-Options from ALL http responses.
+             * This is the same approach Capacitor uses internally — makes iframes work
+             * from file:// origin exactly as they do in the mothership Capacitor WebView.
              */
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 String urlStr = request.getUrl().toString();
-                // Only intercept http/https requests (not file:// assets)
                 if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) {
                     return super.shouldInterceptRequest(view, request);
                 }
@@ -126,22 +142,20 @@ public class ChildActivity extends Activity {
                     URL url = new URL(urlStr);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setConnectTimeout(8000);
-                    conn.setReadTimeout(15000);
+                    conn.setReadTimeout(20000);
                     conn.setInstanceFollowRedirects(true);
                     conn.setRequestMethod(request.getMethod());
-                    // Forward request headers (cookies, auth, etc.)
                     for (Map.Entry<String, String> h : request.getRequestHeaders().entrySet()) {
                         conn.setRequestProperty(h.getKey(), h.getValue());
                     }
                     conn.connect();
 
-                    // Build cleaned response headers — drop the blocking ones
+                    // Build cleaned headers — strip anything that blocks cross-origin frames
                     Map<String, String> responseHeaders = new HashMap<>();
                     for (Map.Entry<String, List<String>> entry : conn.getHeaderFields().entrySet()) {
                         String key = entry.getKey();
                         if (key == null) continue;
                         String lkey = key.toLowerCase();
-                        // Drop headers that block cross-origin frame loading
                         if (lkey.equals("x-frame-options") ||
                             lkey.equals("x-content-type-options") ||
                             lkey.equals("content-security-policy") ||
@@ -157,7 +171,6 @@ public class ChildActivity extends Activity {
                     int statusCode = conn.getResponseCode();
                     String mimeType = conn.getContentType();
                     if (mimeType == null) mimeType = "text/plain";
-                    // Strip charset from mime for WebResourceResponse
                     String charset = "utf-8";
                     if (mimeType.contains(";")) {
                         String[] parts = mimeType.split(";");
@@ -178,7 +191,6 @@ public class ChildActivity extends Activity {
                         responseHeaders, stream
                     );
                 } catch (IOException e) {
-                    // Network error — fall through to default WebView handling
                     return super.shouldInterceptRequest(view, request);
                 }
             }
@@ -186,47 +198,241 @@ public class ChildActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                // Push native SharedPreferences values into WebView localStorage
+                // so the JS component picks up the correct host/port immediately
+                syncConfigToLocalStorage();
                 if (pendingSharedText != null) {
                     dispatchSharedTextToJs(pendingSharedText);
                 }
             }
         });
 
+        // ── JavaScript Bridge ────────────────────────────────────────────────
         webView.addJavascriptInterface(new Object() {
+
+            /** Read the saved host (set from native settings dialog) */
+            @android.webkit.JavascriptInterface
+            public String getHost() {
+                return prefs.getString(PREF_HOST, DEFAULT_HOST);
+            }
+
+            /** Read the saved port */
+            @android.webkit.JavascriptInterface
+            public String getPort() {
+                return prefs.getString(PREF_PORT, DEFAULT_PORT);
+            }
+
+            /** Save host from JS side */
+            @android.webkit.JavascriptInterface
+            public void setHost(String host) {
+                prefs.edit().putString(PREF_HOST, host).apply();
+            }
+
+            /** Save port from JS side */
+            @android.webkit.JavascriptInterface
+            public void setPort(String port) {
+                prefs.edit().putString(PREF_PORT, port).apply();
+            }
+
+            /** Show native settings dialog */
+            @android.webkit.JavascriptInterface
+            public void showSettings() {
+                runOnUiThread(() -> showNativeSettingsDialog());
+            }
+
+            /** Enter Picture-in-Picture mode — no permissions needed */
             @android.webkit.JavascriptInterface
             public void startFloatingBubble() {
-                runOnUiThread(() -> enableFloatingBubbleMode());
+                runOnUiThread(() -> enterPipMode());
             }
+
         }, "grexNativeBridge");
 
-        setContentView(webView);
+        root.addView(webView, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ));
 
-        // Load the injected bootloader — this file is replaced by the mothership
-        // during APK factory ZIP mutation before installation
+        // ── Transparent Touch Overlay (above iframe, detects triple-tap) ────
+        View touchOverlay = new View(this) {
+            @Override
+            public boolean onTouchEvent(MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    long now = System.currentTimeMillis();
+                    if (now - lastTapTime < TRIPLE_TAP_TIMEOUT_MS) {
+                        tapCount++;
+                    } else {
+                        tapCount = 1;
+                    }
+                    lastTapTime = now;
+                    if (tapCount >= 3) {
+                        tapCount = 0;
+                        showNativeSettingsDialog();
+                        return true;
+                    }
+                }
+                return false; // pass all other touches through to WebView
+            }
+        };
+        touchOverlay.setBackgroundColor(Color.TRANSPARENT);
+        // Only catch touches in the top-left corner (80x80 dp) to avoid blocking the iframe
+        int cornerPx = (int)(80 * getResources().getDisplayMetrics().density);
+        FrameLayout.LayoutParams overlayParams = new FrameLayout.LayoutParams(cornerPx, cornerPx);
+        overlayParams.gravity = Gravity.TOP | Gravity.START;
+        root.addView(touchOverlay, overlayParams);
+
+        setContentView(root);
+
         webView.loadUrl("file:///android_asset/bundle/index.html");
-
-        // Handle cold-start intent
         handleSendIntent(getIntent());
     }
 
-    public void enableFloatingBubbleMode() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName())
-                );
-                startActivity(intent);
-                return;
-            }
-        }
-        Intent serviceIntent = new Intent(this, FloatingBubbleService.class);
+    /**
+     * Push the native-stored host/port into the WebView's localStorage.
+     * The JS component (HermesWebUIEngine) reads from localStorage keys:
+     *   hermes_webui_host, hermes_webui_port
+     */
+    private void syncConfigToLocalStorage() {
+        String host = prefs.getString(PREF_HOST, DEFAULT_HOST);
+        String port = prefs.getString(PREF_PORT, DEFAULT_PORT);
+        String js = "localStorage.setItem('hermes_webui_host', '" + host.replace("'", "\\'") + "');" +
+                    "localStorage.setItem('hermes_webui_port', '" + port.replace("'", "\\'") + "');";
+        webView.evaluateJavascript(js, null);
+    }
+
+    /**
+     * Native settings dialog — shown on triple-tap of the top-left corner.
+     * Works even when iframe covers the whole screen.
+     */
+    private void showNativeSettingsDialog() {
+        String currentHost = prefs.getString(PREF_HOST, DEFAULT_HOST);
+        String currentPort = prefs.getString(PREF_PORT, DEFAULT_PORT);
+
+        // Build dialog layout programmatically (no XML needed)
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        int dp16 = (int)(16 * getResources().getDisplayMetrics().density);
+        int dp8  = (int)(8  * getResources().getDisplayMetrics().density);
+        container.setPadding(dp16, dp16, dp16, dp8);
+        container.setBackgroundColor(Color.parseColor("#1a1a2e"));
+
+        // Title
+        TextView title = new TextView(this);
+        title.setText("⚙  Grex Child Settings");
+        title.setTextColor(Color.parseColor("#a855f7"));
+        title.setTextSize(16);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setPadding(0, 0, 0, dp16);
+        container.addView(title);
+
+        // Host label + input
+        TextView hostLabel = new TextView(this);
+        hostLabel.setText("Hermes Server IP");
+        hostLabel.setTextColor(Color.parseColor("#94a3b8"));
+        hostLabel.setTextSize(12);
+        container.addView(hostLabel);
+
+        EditText hostInput = new EditText(this);
+        hostInput.setText(currentHost);
+        hostInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        hostInput.setTextColor(Color.WHITE);
+        hostInput.setHintTextColor(Color.parseColor("#64748b"));
+        hostInput.setHint("e.g. 192.168.1.160");
+        hostInput.setBackgroundColor(Color.parseColor("#0f172a"));
+        hostInput.setPadding(dp8, dp8, dp8, dp8);
+        LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        inputParams.setMargins(0, dp8, 0, dp16);
+        container.addView(hostInput, inputParams);
+
+        // Port label + input
+        TextView portLabel = new TextView(this);
+        portLabel.setText("Port");
+        portLabel.setTextColor(Color.parseColor("#94a3b8"));
+        portLabel.setTextSize(12);
+        container.addView(portLabel);
+
+        EditText portInput = new EditText(this);
+        portInput.setText(currentPort);
+        portInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        portInput.setTextColor(Color.WHITE);
+        portInput.setHintTextColor(Color.parseColor("#64748b"));
+        portInput.setHint("e.g. 8787");
+        portInput.setBackgroundColor(Color.parseColor("#0f172a"));
+        portInput.setPadding(dp8, dp8, dp8, dp8);
+        LinearLayout.LayoutParams portParams = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        portParams.setMargins(0, dp8, 0, dp16);
+        container.addView(portInput, portParams);
+
+        // Info
+        TextView info = new TextView(this);
+        info.setText("Triple-tap top-left corner to open this dialog");
+        info.setTextColor(Color.parseColor("#475569"));
+        info.setTextSize(11);
+        container.addView(info);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert);
+        builder.setView(container);
+        builder.setPositiveButton("Save & Reload", (dialog, which) -> {
+            String newHost = hostInput.getText().toString().trim();
+            String newPort = portInput.getText().toString().trim();
+            if (newHost.isEmpty()) newHost = DEFAULT_HOST;
+            if (newPort.isEmpty()) newPort = DEFAULT_PORT;
+            prefs.edit()
+                .putString(PREF_HOST, newHost)
+                .putString(PREF_PORT, newPort)
+                .apply();
+            // Write to localStorage then reload the bundle
+            String finalHost = newHost;
+            String finalPort = newPort;
+            String js = "localStorage.setItem('hermes_webui_host', '" + finalHost.replace("'", "\\'") + "');" +
+                        "localStorage.setItem('hermes_webui_port', '" + finalPort.replace("'", "\\'") + "');" +
+                        "window.location.reload();";
+            webView.evaluateJavascript(js, null);
+            Toast.makeText(this, "Saved: " + newHost + ":" + newPort, Toast.LENGTH_SHORT).show();
+        });
+        builder.setNeutralButton("Picture-in-Picture", (dialog, which) -> enterPipMode());
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    /**
+     * Enter Android Picture-in-Picture mode.
+     * No SYSTEM_ALERT_WINDOW permission needed — works on all sideloaded APKs.
+     * Minimum API 26 (our minSdk).
+     */
+    private void enterPipMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
+            PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder();
+            // 9:16 portrait ratio for a chat-like floating window
+            builder.setAspectRatio(new Rational(9, 16));
+            enterPictureInPictureMode(builder.build());
         } else {
-            startService(serviceIntent);
+            // Pre-API 26 fallback: just minimize
+            moveTaskToBack(true);
         }
-        moveTaskToBack(true);
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        // Auto-enter PiP when user presses Home while in the app
+        // (same behavior as YouTube floating video)
+        enterPipMode();
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+        // Hide/show system UI based on PiP state
+        if (!isInPictureInPictureMode) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            );
+        }
     }
 
     private String pendingSharedText = null;
@@ -242,13 +448,10 @@ public class ChildActivity extends Activity {
         if (intent == null) return;
         String action = intent.getAction();
         String type = intent.getType();
-
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equals(type) || type.startsWith("text/")) {
                 String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-                if (sharedText == null) {
-                    sharedText = intent.getStringExtra(Intent.EXTRA_SUBJECT);
-                }
+                if (sharedText == null) sharedText = intent.getStringExtra(Intent.EXTRA_SUBJECT);
                 if (sharedText != null) {
                     pendingSharedText = sharedText;
                     dispatchSharedTextToJs(sharedText);
@@ -282,24 +485,18 @@ public class ChildActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (webView != null) {
-            webView.onResume();
-        }
+        if (webView != null) webView.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (webView != null) {
-            webView.onPause();
-        }
+        if (webView != null) webView.onPause();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (webView != null) {
-            webView.destroy();
-        }
+        if (webView != null) webView.destroy();
     }
 }

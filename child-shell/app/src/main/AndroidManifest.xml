@@ -5,9 +5,6 @@
     <!-- Network: Component may connect to localhost daemon / GitHub API -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Floating Chat Bubble Overlay over any app -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="false"
@@ -23,7 +20,8 @@
             android:exported="true"
             android:label="Grex Component Shell Placeholder Target"
             android:hardwareAccelerated="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:supportsPictureInPicture="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|screenLayout"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -97,9 +95,7 @@
                 android:resource="@xml/dashboard_widget_info" />
         </receiver>
 
-        <service
-            android:name="group.beto.grexnexus.child.FloatingBubbleService"
-            android:enabled="true"
-            android:exported="false" />
+        <!-- FloatingBubbleService removed — replaced by Picture-in-Picture mode
+             PiP requires zero permissions and works on all sideloaded APKs -->
     </application>
 </manifest>

@@ -620,7 +620,7 @@ public class HomeScreenPlugin extends Plugin {
             + "      </div>\n"
             + "      <div id=\"grex-shell-msg\" style=\"display:none;background:rgba(168,85,247,0.15);border:1px solid #a855f7;border-radius:10px;padding:10px 14px;font-size:12px;color:#e9d5ff;font-weight:600;\"></div>\n"
             + "      <button id=\"grex-shell-update-btn\" style=\"padding:14px 18px;background:linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;\">⚡ Check Updates & Hot-Reload Bundle</button>\n"
-            + "      <button id=\"grex-shell-bubble-btn\" style=\"padding:12px 18px;background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;\">💬 Minimize to Floating Chat Bubble</button>\n"
+            + "      <button id=\"grex-shell-bubble-btn\" style=\"padding:12px 18px;background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;\">⧉ Float as Picture-in-Picture</button>\n"
             + "      <button id=\"grex-shell-purge-btn\" style=\"padding:10px 16px;background:rgba(255,255,255,0.06);color:#e4e4e7;border:1px solid rgba(255,255,255,0.12);border-radius:12px;font-weight:600;font-size:12px;cursor:pointer;\">↺ Reset Bundle Cache</button>\n"
             + "    </div>\n"
             + "  </div>\n"
