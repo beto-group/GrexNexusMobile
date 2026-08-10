@@ -4,12 +4,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!-- Floating Chat Bubble Overlay over any app -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:allowBackup="true"
@@ -104,10 +98,5 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/dashboard_widget_info" />
         </receiver>
-
-        <service
-            android:name=".FloatingBubbleService"
-            android:enabled="true"
-            android:exported="false" />
     </application>
 </manifest>
