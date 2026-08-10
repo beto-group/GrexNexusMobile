@@ -28,10 +28,11 @@
 
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|screenLayout"
             android:exported="true"
             android:label="Grex Nexus"
             android:launchMode="singleTask"
+            android:supportsPictureInPicture="true"
             android:theme="@android:style/Theme.NoTitleBar">
 
             <!-- Default Launcher Intent -->
