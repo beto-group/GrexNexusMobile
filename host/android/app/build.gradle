@@ -10,8 +10,8 @@ android {
         applicationId "com.grex.nexus"
         minSdk 26
         targetSdk 34
-        versionCode 3814
-        versionName "38.0.14"
+        versionCode 3815
+        versionName "38.0.15"
     }
 
     buildTypes {

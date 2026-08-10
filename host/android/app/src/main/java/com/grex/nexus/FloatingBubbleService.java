@@ -85,8 +85,12 @@ public class FloatingBubbleService extends Service {
         }
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        createBubbleView();
-        createExpandedView();
+        try {
+            createBubbleView();
+            createExpandedView();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void createBubbleView() {
