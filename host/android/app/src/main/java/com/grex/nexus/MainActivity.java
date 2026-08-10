@@ -173,7 +173,12 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onBackPressed() {
         if (this.bridge != null && this.bridge.getWebView() != null) {
-            this.bridge.getWebView().evaluateJavascript(
+            WebView wv = this.bridge.getWebView();
+            if (wv.canGoBack()) {
+                wv.goBack();
+                return;
+            }
+            wv.evaluateJavascript(
                 "javascript:(function(){" +
                 "  var evt = new CustomEvent('nativeAndroidBackButton');" +
                 "  window.dispatchEvent(evt);" +
