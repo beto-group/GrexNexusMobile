@@ -68,13 +68,32 @@ public class ChildActivity extends Activity {
         // V8 Bytecode & Disk Caching — enables instant cold starts
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
+        // Enable Mixed Content & Cookies for local HTTP/HTTPS backend connection
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+            android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+        }
+
         // Enable remote DevTools debugging (Chrome → chrome://inspect)
         WebView.setWebContentsDebuggingEnabled(true);
+
+        webView.setWebChromeClient(new android.webkit.WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final android.webkit.PermissionRequest request) {
+                request.grant(request.getResources());
+            }
+        });
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return false;
+            }
+
+            @Override
+            public void onReceivedSslError(WebView view, android.webkit.SslErrorHandler handler, android.net.http.SslError error) {
+                handler.proceed();
             }
 
             @Override
