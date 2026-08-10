@@ -8,8 +8,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.InputType;
 import android.util.Rational;
 import android.view.Gravity;
@@ -240,9 +242,15 @@ public class ChildActivity extends Activity {
                 runOnUiThread(() -> showNativeSettingsDialog());
             }
 
-            /** Enter Picture-in-Picture mode — no permissions needed */
+            /** Trigger floating chat bubble overlay (Orb) */
             @android.webkit.JavascriptInterface
             public void startFloatingBubble() {
+                runOnUiThread(() -> enableFloatingBubbleMode());
+            }
+
+            /** Enter Picture-in-Picture mode */
+            @android.webkit.JavascriptInterface
+            public void startPip() {
                 runOnUiThread(() -> enterPipMode());
             }
 
@@ -392,9 +400,38 @@ public class ChildActivity extends Activity {
             webView.evaluateJavascript(js, null);
             Toast.makeText(this, "Saved: " + newHost + ":" + newPort, Toast.LENGTH_SHORT).show();
         });
-        builder.setNeutralButton("Picture-in-Picture", (dialog, which) -> enterPipMode());
+        builder.setNeutralButton("Floating Bubble 💬", (dialog, which) -> enableFloatingBubbleMode());
         builder.setNegativeButton("Cancel", null);
         builder.show();
+    }
+
+    public void enableFloatingBubbleMode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                try {
+                    Intent intent = new Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName())
+                    );
+                    startActivity(intent);
+                    Toast.makeText(this, "Please enable 'Display over other apps' permission", Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "Permission settings failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+        }
+        try {
+            Intent serviceIntent = new Intent(this, FloatingBubbleService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+            moveTaskToBack(true);
+        } catch (Exception e) {
+            Toast.makeText(this, "Floating Bubble error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**

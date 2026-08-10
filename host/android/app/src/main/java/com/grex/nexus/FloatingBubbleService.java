@@ -1,4 +1,4 @@
-package group.beto.grexnexus.child;
+package com.grex.nexus;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -25,6 +25,9 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,14 +36,10 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 /**
- * Grex Floating Chat Bubble Service
- * Enables floating overlay mode for standalone child APKs.
+ * Grex Floating Chat Bubble Service (Mothership)
+ * Enables floating circular orb overlay mode for GrexNexusMobile.
  * The chat bubble stays floating on top of any app on Android,
  * and expands into a floating web window when tapped.
  */
@@ -64,9 +63,8 @@ public class FloatingBubbleService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        // Android 8.0+ Foreground Service requirement
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String channelId = "grex_floating_bubble";
+            String channelId = "grex_floating_bubble_mothership";
             NotificationChannel channel = new NotificationChannel(
                     channelId,
                     "Grex Floating Chat Bubble",
@@ -78,12 +76,12 @@ public class FloatingBubbleService extends Service {
             }
 
             Notification notification = new Notification.Builder(this, channelId)
-                    .setContentTitle("Grex Chat Bubble Active")
+                    .setContentTitle("Grex Nexus Chat Bubble Active")
                     .setContentText("Tap floating bubble to access your app from anywhere")
                     .setSmallIcon(android.R.drawable.stat_notify_chat)
                     .build();
 
-            startForeground(8881, notification);
+            startForeground(8882, notification);
         }
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -110,7 +108,6 @@ public class FloatingBubbleService extends Service {
         bubbleParams.x = 20;
         bubbleParams.y = 300;
 
-        // Custom Glass Orb Circle View
         FrameLayout frameLayout = new FrameLayout(this);
         GradientDrawable shape = new GradientDrawable();
         shape.setShape(GradientDrawable.OVAL);
@@ -118,7 +115,6 @@ public class FloatingBubbleService extends Service {
         shape.setStroke((int) (2 * getResources().getDisplayMetrics().density), 0xFFe9d5ff);
         frameLayout.setBackground(shape);
 
-        // Icon inside orb
         TextView iconText = new TextView(this);
         iconText.setText("⚡");
         iconText.setTextSize(22);
@@ -130,7 +126,6 @@ public class FloatingBubbleService extends Service {
 
         bubbleView = frameLayout;
 
-        // Touch Drag & Tap Listener
         bubbleView.setOnTouchListener(new View.OnTouchListener() {
             private int initialX, initialY;
             private float initialTouchX, initialTouchY;
@@ -157,6 +152,7 @@ public class FloatingBubbleService extends Service {
                         long duration = System.currentTimeMillis() - touchStartTime;
                         float diffX = Math.abs(event.getRawX() - initialTouchX);
                         float diffY = Math.abs(event.getRawY() - initialTouchY);
+
                         if (duration < 250 && diffX < 10 && diffY < 10) {
                             toggleExpand();
                         }
@@ -186,7 +182,6 @@ public class FloatingBubbleService extends Service {
         );
         expandedParams.gravity = Gravity.CENTER;
 
-        // Container Layout
         LinearLayout container = new LinearLayout(this);
         container.setOrientation(LinearLayout.VERTICAL);
 
@@ -197,7 +192,6 @@ public class FloatingBubbleService extends Service {
         container.setBackground(bg);
         container.setClipToOutline(true);
 
-        // Header Control Bar
         LinearLayout header = new LinearLayout(this);
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
@@ -205,14 +199,13 @@ public class FloatingBubbleService extends Service {
         header.setBackgroundColor(0x3318181c);
 
         TextView title = new TextView(this);
-        title.setText("Grex Floating App");
+        title.setText("Grex Nexus Floating App");
         title.setTextColor(Color.WHITE);
         title.setTextSize(14);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
         header.addView(title, titleParams);
 
-        // Fullscreen launch button
         TextView fullBtn = new TextView(this);
         fullBtn.setText(" ⛶ ");
         fullBtn.setTextColor(0xFFc084fc);
@@ -220,13 +213,12 @@ public class FloatingBubbleService extends Service {
         fullBtn.setPadding(12, 4, 12, 4);
         fullBtn.setOnClickListener(v -> {
             toggleExpand();
-            Intent intent = new Intent(this, ChildActivity.class);
+            Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         });
         header.addView(fullBtn);
 
-        // Minimize Button
         TextView minBtn = new TextView(this);
         minBtn.setText(" 🗕 ");
         minBtn.setTextColor(0xFFa1a1aa);
@@ -235,7 +227,6 @@ public class FloatingBubbleService extends Service {
         minBtn.setOnClickListener(v -> toggleExpand());
         header.addView(minBtn);
 
-        // Close Button
         TextView closeBtn = new TextView(this);
         closeBtn.setText(" ✕ ");
         closeBtn.setTextColor(0xFFf87171);
@@ -249,7 +240,6 @@ public class FloatingBubbleService extends Service {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
-        // Floating WebView Surface
         overlayWebView = new WebView(this);
         WebSettings settings = overlayWebView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -345,7 +335,7 @@ public class FloatingBubbleService extends Service {
             }
         });
 
-        overlayWebView.loadUrl("file:///android_asset/bundle/index.html");
+        overlayWebView.loadUrl("file:///android_asset/public/index.html");
 
         container.addView(overlayWebView, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,

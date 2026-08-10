@@ -1,11 +1,15 @@
 package com.grex.nexus;
 
 import android.app.PictureInPictureParams;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Rational;
 import android.view.View;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -48,7 +52,47 @@ public class MainActivity extends BridgeActivity {
             public boolean isSupported() {
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
             }
+            @android.webkit.JavascriptInterface
+            public void startBubble() {
+                runOnUiThread(() -> enableFloatingBubbleMode());
+            }
         }, "GrexPip");
+
+        this.bridge.getWebView().addJavascriptInterface(new Object() {
+            @android.webkit.JavascriptInterface
+            public void startFloatingBubble() {
+                runOnUiThread(() -> enableFloatingBubbleMode());
+            }
+        }, "grexNativeBridge");
+    }
+
+    public void enableFloatingBubbleMode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                try {
+                    Intent intent = new Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName())
+                    );
+                    startActivity(intent);
+                    Toast.makeText(this, "Please enable 'Display over other apps' permission", Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "Permission settings failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+        }
+        try {
+            Intent serviceIntent = new Intent(this, FloatingBubbleService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+            moveTaskToBack(true);
+        } catch (Exception e) {
+            Toast.makeText(this, "Floating Bubble error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     void enterPipModeWithRatio(String ratioStr) {
