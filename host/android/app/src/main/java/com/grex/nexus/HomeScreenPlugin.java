@@ -800,16 +800,7 @@ public class HomeScreenPlugin extends Plugin {
             }
             if (!match) continue;
 
-            // If the next UTF-16LE char is '.' (0x2E 0x00), this is a class name like
-            // "pkgplaceholder00000.ChildActivity" — skip so DEX class loader still works
-            int afterOffset = i + targetBytes.length;
-            if (afterOffset + 1 < result.length
-                    && result[afterOffset] == 0x2E && result[afterOffset + 1] == 0x00) {
-                android.util.Log.d("GrexAPKFactory", "[APK Factory] Skipping activity class-name ref at offset " + i);
-                continue;
-            }
-
-            // Replace standalone package reference
+            // Replace package, permission, and provider authority occurrences
             for (int j = 0; j < targetLen; j++) {
                 char c = paddedPkg.charAt(j);
                 result[i + j * 2]     = (byte)(c & 0xFF);
