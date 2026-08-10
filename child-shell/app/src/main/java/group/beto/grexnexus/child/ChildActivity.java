@@ -2,7 +2,10 @@ package group.beto.grexnexus.child;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.webkit.WebResourceRequest;
@@ -105,6 +108,13 @@ public class ChildActivity extends Activity {
             }
         });
 
+        webView.addJavascriptInterface(new Object() {
+            @android.webkit.JavascriptInterface
+            public void startFloatingBubble() {
+                runOnUiThread(() -> enableFloatingBubbleMode());
+            }
+        }, "grexNativeBridge");
+
         setContentView(webView);
 
         // Load the injected bootloader — this file is replaced by the mothership
@@ -113,6 +123,26 @@ public class ChildActivity extends Activity {
 
         // Handle cold-start intent
         handleSendIntent(getIntent());
+    }
+
+    public void enableFloatingBubbleMode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName())
+                );
+                startActivity(intent);
+                return;
+            }
+        }
+        Intent serviceIntent = new Intent(this, FloatingBubbleService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+        moveTaskToBack(true);
     }
 
     private String pendingSharedText = null;

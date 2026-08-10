@@ -5,6 +5,9 @@
     <!-- Network: Component may connect to localhost daemon / GitHub API -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Floating Chat Bubble Overlay over any app -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="false"
@@ -94,5 +97,9 @@
                 android:resource="@xml/dashboard_widget_info" />
         </receiver>
 
+        <service
+            android:name="group.beto.grexnexus.child.FloatingBubbleService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 </manifest>
