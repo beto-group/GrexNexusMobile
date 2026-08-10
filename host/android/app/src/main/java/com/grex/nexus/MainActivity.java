@@ -23,7 +23,12 @@ public class MainActivity extends BridgeActivity {
         WebView.setWebContentsDebuggingEnabled(true);
         try {
             if (this.bridge != null && this.bridge.getWebView() != null) {
-                this.bridge.getWebView().clearCache(true);
+                WebView wv = this.bridge.getWebView();
+                android.webkit.CookieManager cm = android.webkit.CookieManager.getInstance();
+                cm.setAcceptCookie(true);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cm.setAcceptThirdPartyCookies(wv, true);
+                }
             }
         } catch (Exception e) {}
 
@@ -174,6 +179,16 @@ public class MainActivity extends BridgeActivity {
             );
         } else {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                android.webkit.CookieManager.getInstance().flush();
+            } catch (Exception ignored) {}
         }
     }
 }

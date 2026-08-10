@@ -529,6 +529,11 @@ public class ChildActivity extends Activity {
     protected void onPause() {
         super.onPause();
         if (webView != null) webView.onPause();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                android.webkit.CookieManager.getInstance().flush();
+            } catch (Exception ignored) {}
+        }
     }
 
     @Override
